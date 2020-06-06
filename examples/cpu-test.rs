@@ -144,7 +144,7 @@ fn main() {
     let cpu = board.new_socket_with(Box::new(SimpleCPU::new()));
     let ram = board.new_socket_with(Box::new(Ram256B::new()));
     // rom chip with a simple factorial calculation program
-    // pre-compiled to perform a factorial of 4
+    // pre-compiled to perform a factorial of 5
     let rom = board.new_socket_with(Box::new(Rom256B::from_data(
         [
             // init
@@ -167,7 +167,7 @@ fn main() {
             // 0x0D
             TAB,            // B = A
             // 0x0E
-            CPC_NB, 0x05,   // CMP C with 5
+            CPC_NB, 0x06,   // CMP C with 6
             // 0x10
             BZF, 0x0F, 0x27,// IF Z JMP :end
             // 0x13
@@ -338,12 +338,13 @@ fn main() {
         trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::OE).unwrap());
         trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::OE).unwrap());
     }
+    // initialize the board
     board.run(Duration::from_millis(1));
 
     println!("ROM:\n{:?}", rom.borrow_mut().get_chip().as_ref().unwrap());
     println!("RAM before:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
-
-    board.run_during(Duration::from_secs(10), Duration::from_millis(1));
+    
+    board.run_during(Duration::from_secs(20), Duration::from_millis(1));
 
     println!("RAM after:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
     println!("CPU:\n{:?}", cpu.borrow_mut().get_chip().as_ref().unwrap());

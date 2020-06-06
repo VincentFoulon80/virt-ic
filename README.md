@@ -97,4 +97,4 @@ Take a look at the [generated documentation](https://docs.rs/virt-ic/).
 See [examples](https://github.com/VincentFoulon80/virt-ic/tree/master/examples) :
 - **readme** : Same example as provided in this readme
 - **ram-test** : A simple test of a RAM chip
-- **cpu-test** : A simple circuit containing a minimal setup running a CPU processing factorial of 4
+- **cpu-test** : A simple circuit containing a minimal setup running a CPU processing factorial of 5

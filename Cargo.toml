@@ -3,6 +3,7 @@ name = "virt-ic"
 description = "virtual integrated circuits - an backend IC emulator"
 version = "0.1.0"
 authors = ["Vincent Foulon <sup.vfoulon@gmail.com>"]
+readme = "README.md"
 repository = "https://github.com/VincentFoulon80/virt-ic"
 keywords = ["emulator","integrated-circuit", "backend"]
 license = "MIT"

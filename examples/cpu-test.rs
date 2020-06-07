@@ -225,13 +225,13 @@ fn main() {
         ]
     )));
 
+    // instanciate sockets with their chips
     let gen = board.new_socket_with(Box::new(Generator::new()));
-
     let clk = board.new_socket_with(Box::new(Clock100Hz::new()));
-
     let and = board.new_socket_with(Box::new(GateAnd::new()));
     let not = board.new_socket_with(Box::new(GateNot::new()));
 
+    // Initalize links between every chips
     {
         // VCC
         let trc = board.new_trace();
@@ -322,8 +322,7 @@ fn main() {
         trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::IO0+i).unwrap());
     }
     {
-        // Ram and Rom CS, WE and OE
-
+        // Ram and Rom Chip Select, Write Enable and Output Enable
         let trc = board.new_trace();
         trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::NOT_A).unwrap());
         trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::CS).unwrap());
@@ -343,7 +342,7 @@ fn main() {
 
     println!("ROM:\n{:?}", rom.borrow_mut().get_chip().as_ref().unwrap());
     println!("RAM before:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
-    
+    // start the simulation    
     board.run_during(Duration::from_secs(20), Duration::from_millis(1));
 
     println!("RAM after:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());

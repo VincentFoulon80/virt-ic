@@ -18,6 +18,15 @@ This library is a Backend emulator, it means that there is no interface (yet) to
 - Memory (RAM, ROM)
 - CPU (right now there is only one fictional CPU)
 
+# Contributing
+
+This project is open to any contribution, from code reviewing to direct contribution !
+You can :
+- Suggest or Improve current code
+- Suggest or Add new features
+- Suggest or Add new built-in chips
+- Any initiative is welcome !
+
 # example usage 
 
 ```rust

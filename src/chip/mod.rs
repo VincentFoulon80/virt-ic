@@ -35,5 +35,16 @@ pub trait Chip: std::fmt::Debug {
     fn run(&mut self, elapsed_time: std::time::Duration);
     fn get_pin_qty(&self) -> u8;
     fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str>;
-    // fn set_pin(&mut self, pin: u8, state: &State);
+    fn get_pin_state(&mut self, pin: u8) -> State {
+        if let Ok(pin) = self.get_pin(pin) {
+            pin.borrow().state.clone()
+        } else {
+            State::Undefined
+        }
+    }
+    fn set_pin_state(&mut self, pin: u8, state: &State) {
+        if let Ok(pin) = self.get_pin(pin) {
+            pin.borrow_mut().state = state.clone();
+        } 
+    }
 }

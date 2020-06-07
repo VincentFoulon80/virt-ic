@@ -32,20 +32,6 @@ impl Socket {
         &mut self.chip
     }
 
-    pub fn get_pin_state(&mut self, pin: u8) -> State {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow().state.clone()
-        } else {
-            State::Undefined
-        }
-    }
-
-    pub fn set_pin_state(&mut self, pin: u8, state: &State) {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow_mut().state = state.clone();
-        }
-    }
-
     pub fn get_pin_type(&mut self, pin: u8) -> PinType {
         if self.chip.is_some() {
             self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow().pin_type.clone()
@@ -75,6 +61,20 @@ impl Chip for Socket {
             self.chip.as_mut().unwrap().get_pin(pin)
         } else {
             Err("No chip connected")
+        }
+    }
+
+    fn get_pin_state(&mut self, pin: u8) -> State {
+        if self.chip.is_some() {
+            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow().state.clone()
+        } else {
+            State::Undefined
+        }
+    }
+
+    fn set_pin_state(&mut self, pin: u8, state: &State) {
+        if self.chip.is_some() {
+            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow_mut().state = state.clone();
         }
     }
 

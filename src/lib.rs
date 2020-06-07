@@ -55,4 +55,11 @@ impl State {
             _ => false
         }
     }
+
+    pub fn as_u8(&self) -> u8 {
+        match self {
+            State::High => 1,
+            _ => 0
+        }
+    }
 }

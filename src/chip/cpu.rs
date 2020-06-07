@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 /// # A simple example CPU
-/// - 1M of address space (10 ADDR pins)
+/// - 4M of address space (12 ADDR pins)
 /// - 8-bit IO Pins
 /// - 3 data register (Accumulator, B and C)
 /// - 2 address registers (H and L forming the full address HL)
@@ -19,7 +19,7 @@ use std::rc::Rc;
 /// If 0xFFF contains 0x0E, the CPU will use 0x0E00 to 0x0EFF for his stack.  
 /// Note that the bank can't go beyond 0x0F since the CPU only has a 12-bit address space.   
 /// 
-/// TODO: Implement IRQ
+/// TODO: Implement IRQ  
 /// On IRQ, the CPU will fetch the Interrupt code address at 0xFFB and 0xFFC.  
 /// When IRQ is triggered, the Address at 0xFFC and 0xFFD will be used as a JSR opcode.  
 /// To return to the main code, you'll just need to execute a RTN opcode.  

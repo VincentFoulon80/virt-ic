@@ -1,3 +1,4 @@
+//! Central Processing Units
 use super::super::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -118,7 +119,10 @@ use std::rc::Rc;
 /// STA (0xC1) | $1$2: address| Store the value of accumulator into address $1$2
 /// 
 /// # diagram
-/// IRQ: Interrupt Request
+/// IRQ: Interrupt Request (active low)
+/// RESET: Reset (active low)
+/// R/!W: Read Write mode
+/// CLOCK: Clock pin
 /// A0-9: Addresses
 /// IO0-7: Input/Output
 /// ```

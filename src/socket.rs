@@ -2,6 +2,7 @@ use super::{Chip, Pin, PinType, State};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+/// A Socket that holds a Chip
 #[derive(Default, Debug)]
 pub struct Socket {
     chip: Option<Box<dyn Chip>>,

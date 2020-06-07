@@ -2,6 +2,7 @@ use super::{Pin, PinType, State};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+/// A Trace that connects two chip's Pin
 #[derive(Default, Debug)]
 pub struct Trace {
     link: Vec<Rc<RefCell<Pin>>>

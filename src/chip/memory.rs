@@ -1,3 +1,4 @@
+//! Readable and/or Writable Memory Chips
 use super::super::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -7,9 +8,9 @@ use rand::random;
 /// # A 256-bytes RAM chip
 /// 
 /// # Diagram
-/// CS: Chip Select
-/// WE: Write Enable
-/// OE: Output Enable
+/// CS: Chip Select (active low)
+/// WE: Write Enable (active low)
+/// OE: Output Enable (active low)
 /// A0-7: Addresses
 /// IO0-7: Input/Output
 /// ```
@@ -145,6 +146,7 @@ impl Chip for Ram256B {
             Err("Pin out of bounds")
         }
     }
+
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
         if self.pin[10].borrow().state == State::Low && self.pin[21].borrow().state == State::High {
@@ -207,9 +209,8 @@ impl Chip for Ram256B {
 /// # A 256-bytes ROM chip
 /// 
 /// # Diagram
-/// CS: Chip Select
-/// WE: Write Enable
-/// OE: Output Enable
+/// CS: Chip Select (active low)
+/// OE: Output Enable (active low)
 /// A0-7: Addresses
 /// IO0-7: Input/Output
 /// ```

@@ -2,7 +2,7 @@
 
 [Changelog](https://github.com/VincentFoulon80/virt-ic/releases)
 
-This library is a Integrated Circuit Emulator backend that can simulate interractions between multiple chips.
+This library is a Integrated Circuit Emulator backend that can simulate interactions between multiple chips.
 
 You start by creating a Board, and then you add Traces or Sockets, and then you plug Chips and link Pins together to form a virtual circuit.
 You can then run the circuit to emulate the chips and links between them.

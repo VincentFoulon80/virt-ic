@@ -1,3 +1,4 @@
+//! Clocks that pulse at different speeds
 use super::super::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;

@@ -7,6 +7,7 @@ pub use board::Board;
 pub use trace::Trace;
 pub use socket::Socket;
 
+/// Current's State
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum State {
     Undefined,

@@ -1,3 +1,4 @@
+//! Generators that provide fixed currents
 use super::super::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;

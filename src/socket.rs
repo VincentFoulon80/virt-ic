@@ -33,54 +33,66 @@ impl Socket {
     }
 
     pub fn get_pin_type(&mut self, pin: u8) -> PinType {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow().pin_type.clone()
+        if let Some(chip) = self.chip.as_mut() {
+            if let Ok(pin) = chip.get_pin(pin) {
+                pin.borrow().pin_type.clone()
+            } else {
+                PinType::Undefined
+            }
         } else {
             PinType::Undefined
         }
     }
 
     pub fn set_pin_type(&mut self, pin: u8, pin_type: &PinType) {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow_mut().pin_type = pin_type.clone();
+        if let Some(chip) = self.chip.as_mut() {
+            if let Ok(pin) = chip.get_pin(pin) {
+                pin.borrow_mut().pin_type = pin_type.clone();
+            } 
         }
     }
 }
 
 impl Chip for Socket {
     fn get_pin_qty(&self) -> u8 {
-        if self.chip.is_some() {
-            self.chip.as_ref().unwrap().get_pin_qty()
+        if let Some(chip) = self.chip.as_ref() {
+            chip.get_pin_qty()
         } else {
             0
         }
     }
 
     fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin)
+        if let Some(chip) = self.chip.as_mut() {
+            chip.get_pin(pin)
         } else {
             Err("No chip connected")
         }
     }
 
     fn get_pin_state(&mut self, pin: u8) -> State {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow().state.clone()
+        if let Some(chip) = self.chip.as_mut() {
+            if let Ok(pin) = chip.get_pin(pin) {
+                pin.borrow().state.clone()
+            } else {
+                State::Undefined
+            }
         } else {
             State::Undefined
         }
     }
 
     fn set_pin_state(&mut self, pin: u8, state: &State) {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().get_pin(pin).unwrap().borrow_mut().state = state.clone();
+        if let Some(chip) = self.chip.as_mut() {
+            if let Ok(pin) = chip.get_pin(pin) {
+                pin.borrow_mut().state = state.clone();
+            }
         }
     }
 
     fn run(&mut self, elapsed_time: std::time::Duration) {
-        if self.chip.is_some() {
-            self.chip.as_mut().unwrap().run(elapsed_time)
+        if let Some(chip) = self.chip.as_mut() {
+            chip.run(elapsed_time)
         }
     }
 }

@@ -60,9 +60,9 @@ impl Chip for Button {
     }
     fn run(&mut self, _: std::time::Duration) {
         if self.down {
-            self.pin[1].borrow_mut().unwrap().state = self.pin[0].borrow().unwrap().state;
+            self.pin[1].borrow_mut().state = self.pin[0].borrow().state;
         } else {
-            self.pin[1].borrow_mut().unwrap().state = State::Undefined;
+            self.pin[1].borrow_mut().state = State::Undefined;
         }
     }
 }

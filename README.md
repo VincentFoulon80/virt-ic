@@ -7,7 +7,7 @@ This library is a Integrated Circuit Emulator backend that can simulate interrac
 You start by creating a Board, and then you add Traces or Sockets, and then you plug Chips and link Pins together to form a virtual circuit.
 You can then run the circuit to emulate the chips and links between them.
 
-This library is a Backend emulator, it means that there is no interface (yet) to create boards. It'll only emulate chips.
+This library is a Backend emulator, it means that there is no GUI (yet) to create boards.
 
 ## Chips
 

@@ -20,16 +20,19 @@ impl Trace {
     }
 
     pub fn communicate(&mut self) {
-        let mut main_state = State::Undefined;
+        let mut main_state = State::Undefined.to_current();
         for pin in self.link.iter() {
             if pin.borrow().pin_type == PinType::Output {
-                match pin.borrow().state {
-                    State::High => main_state = State::High,
-                    State::Low => if main_state == State::Undefined { main_state = State::Low },
-                    State::Undefined => {}
+                let pin_state = pin.borrow().state.clone();
+                if pin_state.to_current().voltage >  main_state.voltage {
+                    main_state.voltage = pin_state.to_current().voltage;
+                }
+                if pin_state.to_current().amperage >  main_state.amperage {
+                    main_state.amperage = pin_state.to_current().amperage;
                 }
             }
         }
+        let main_state = State::Analog(main_state);
         for pin in self.link.iter_mut() {
             if pin.borrow().pin_type != PinType::Output {
                 pin.borrow_mut().state = main_state.clone();

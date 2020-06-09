@@ -20,13 +20,15 @@ pub enum PinType {
 /// A chip's Pin. Can be of type Input or Output, and holds a State
 #[derive(Debug)]
 pub struct Pin {
+    pub parent: u128,
     pub number: u8,
     pub pin_type: PinType,
     pub state: State,
 }
 impl Pin {
-    pub fn new(number: u8, pin_type: PinType) -> Pin {
+    pub fn new(parent_uuid: u128, number: u8, pin_type: PinType) -> Pin {
         Pin {
+            parent: parent_uuid,
             number,
             pin_type,
             state: State::Undefined
@@ -36,6 +38,7 @@ impl Pin {
 
 /// Chip : a trait that represents chips on board
 pub trait Chip: std::fmt::Debug {
+    fn get_uuid(&self) -> u128;
     /// Runs the chip for a certain amount of time
     fn run(&mut self, elapsed_time: std::time::Duration);
     /// Returns the number of pins the chip has

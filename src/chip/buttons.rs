@@ -16,6 +16,7 @@ use std::rc::Rc;
 /// ```
 #[derive(Debug)]
 pub struct Button {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 2],
     down: bool
 }
@@ -30,10 +31,12 @@ impl Button {
     pub const OUT: u8 = 2;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         Button {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
             ],
             down: false
         }
@@ -48,6 +51,10 @@ impl Button {
     }
 }
 impl Chip for Button {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    
     fn get_pin_qty(&self) -> u8 { 
         2
     }

@@ -55,6 +55,14 @@ impl Socket {
 }
 
 impl Chip for Socket {
+    fn get_uuid(&self) -> u128 {
+        if let Some(chip) = self.chip.as_ref() {
+            chip.get_uuid()
+        } else {
+            0
+        }
+    }
+
     fn get_pin_qty(&self) -> u8 {
         if let Some(chip) = self.chip.as_ref() {
             chip.get_pin_qty()

@@ -143,6 +143,7 @@ use std::rc::Rc;
 ///        --------
 /// ```
 pub struct SimpleCPU {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 26],
     program_counter: u16,
     accumulator: u8,
@@ -205,34 +206,36 @@ impl SimpleCPU {
     pub const GND: u8 = 13;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         SimpleCPU {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(15, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(16, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(17, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(18, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(19, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(20, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(21, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(22, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(23, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(24, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(25, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(26, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 15, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 16, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 17, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 18, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 19, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 20, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 21, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 23, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 24, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 25, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 26, PinType::Input)))
             ],
             program_counter: 0,
             accumulator: 0,
@@ -844,6 +847,10 @@ impl SimpleCPU {
     }
 }
 impl Chip for SimpleCPU {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+
     fn get_pin_qty(&self) -> u8 { 
         26
     }

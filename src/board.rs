@@ -72,12 +72,10 @@ impl Board {
         let instant = Instant::now();
         let mut old = Instant::now();
         let mut new = Instant::now();
-        let mut count = 0;
         while instant.elapsed() <= duration {
             self.run(new.duration_since(old));
             old = new;
             new = Instant::now();
-            count += 1;
         }
     }
 }

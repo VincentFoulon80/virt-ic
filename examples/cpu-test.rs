@@ -227,7 +227,7 @@ fn main() {
 
     // instanciate sockets with their chips
     let gen = board.new_socket_with(Box::new(Generator::new()));
-    let clk = board.new_socket_with(Box::new(Clock100Hz::new()));
+    let clk = board.new_socket_with(Box::new(Clock1kHz::new()));
     let and = board.new_socket_with(Box::new(GateAnd::new()));
     let not = board.new_socket_with(Box::new(GateNot::new()));
 
@@ -241,7 +241,7 @@ fn main() {
         trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::VCC).unwrap());
         trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::RESET).unwrap());
         trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::IRQ).unwrap());
-        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock100Hz::VCC).unwrap());
+        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock1kHz::VCC).unwrap());
         trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::VCC).unwrap());
         trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::VCC).unwrap());
     }
@@ -252,14 +252,14 @@ fn main() {
         trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::GND).unwrap());
         trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::GND).unwrap());
         trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::GND).unwrap());
-        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock100Hz::GND).unwrap());
+        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock1kHz::GND).unwrap());
         trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::GND).unwrap());
         trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::GND).unwrap());
     }
     {
         // CLK
         let trc = board.new_trace();
-        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock100Hz::CLK).unwrap());
+        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock1kHz::CLK).unwrap());
         trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::CLOCK).unwrap());
     }
     {
@@ -342,9 +342,15 @@ fn main() {
 
     println!("ROM:\n{:?}", rom.borrow_mut().get_chip().as_ref().unwrap());
     println!("RAM before:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
-    // start the simulation    
-    board.run_during(Duration::from_secs(20), Duration::from_millis(1));
+
+    println!("========================================");
+    println!("Running ...");
+    // start a realtime simulation
+    board.run_realtime(Duration::from_secs(2));
+
+    println!("Done !");
+    println!("========================================");
 
     println!("RAM after:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
-    println!("CPU:\n{:?}", cpu.borrow_mut().get_chip().as_ref().unwrap());
+    println!("CPU state:\n{:?}", cpu.borrow_mut().get_chip().as_ref().unwrap());
 }

@@ -1,6 +1,7 @@
 use super::{Trace, Socket, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 /// A Board that contains Traces and Sockets
 #[derive(Default)]
@@ -46,7 +47,7 @@ impl Board {
 
     /// Run the circuit for a certain amount of time
     /// You must use `use_during` since it provides more accurate simulation by stepping
-    pub fn run(&mut self, time_elapsed : std::time::Duration) {
+    pub fn run(&mut self, time_elapsed : Duration) {
         // TODO: find a way to update the traces accurately
         // current issue : the order of the traces affects the order of the links
         for trc in self.traces.iter_mut() {
@@ -59,11 +60,24 @@ impl Board {
 
     /// Run the circuit for a certain amount of time segmented by a step
     /// The smaller the step the more accurate the simulation will be.
-    pub fn run_during(&mut self, duration: std::time::Duration, step: std::time::Duration) {
-        let mut elapsed = std::time::Duration::new(0,0);
+    pub fn run_during(&mut self, duration: Duration, step: Duration) {
+        let mut elapsed = Duration::new(0,0);
         while elapsed < duration {
             self.run(step);
             elapsed += step;
+        }
+    }
+
+    pub fn run_realtime(&mut self, duration: Duration) {
+        let instant = Instant::now();
+        let mut old = Instant::now();
+        let mut new = Instant::now();
+        let mut count = 0;
+        while instant.elapsed() <= duration {
+            self.run(new.duration_since(old));
+            old = new;
+            new = Instant::now();
+            count += 1;
         }
     }
 }

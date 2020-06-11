@@ -1,6 +1,6 @@
 //! Clocks that pulse at different speeds
+use super::{Chip, Pin, PinType};
 use crate::State;
-use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
@@ -18,7 +18,7 @@ pub struct Clock100Hz {
     uuid: u128,
     pin: [Rc<RefCell<Pin>>; 4],
     timer: Duration,
-    active: bool
+    active: bool,
 }
 impl Default for Clock100Hz {
     fn default() -> Self {
@@ -41,7 +41,7 @@ impl Clock100Hz {
                 Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Input))),
             ],
-            timer: Duration::new(0,0),
+            timer: Duration::new(0, 0),
             active: false,
         }
     }
@@ -53,13 +53,13 @@ impl Chip for Clock100Hz {
     fn get_type(&self) -> &str {
         "virt_ic::Clock100Hz"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         4
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 4 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
@@ -68,7 +68,7 @@ impl Chip for Clock100Hz {
         if self.active {
             self.active = false;
             self.pin[0].borrow_mut().state = State::Low;
-        } 
+        }
         // check alimented
         const LIMIT: Duration = Duration::from_millis(10);
         if self.pin[1].borrow().state == State::Low && self.pin[3].borrow().state == State::High {
@@ -81,14 +81,14 @@ impl Chip for Clock100Hz {
                 self.pin[0].borrow_mut().state = State::High;
             }
         } else {
-            self.timer = Duration::new(0,0);
+            self.timer = Duration::new(0, 0);
         }
     }
 
     fn save_data(&self) -> Vec<String> {
         vec![
-            String::from(if self.active {"ON"} else {"OFF"}),
-            ron::to_string(&self.timer).unwrap()
+            String::from(if self.active { "ON" } else { "OFF" }),
+            ron::to_string(&self.timer).unwrap(),
         ]
     }
     fn load_data(&mut self, chip_data: &[String]) {
@@ -111,7 +111,7 @@ pub struct Clock1kHz {
     uuid: u128,
     pin: [Rc<RefCell<Pin>>; 4],
     timer: Duration,
-    active: bool
+    active: bool,
 }
 impl Default for Clock1kHz {
     fn default() -> Self {
@@ -134,7 +134,7 @@ impl Clock1kHz {
                 Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Input))),
             ],
-            timer: Duration::new(0,0),
+            timer: Duration::new(0, 0),
             active: false,
         }
     }
@@ -146,13 +146,13 @@ impl Chip for Clock1kHz {
     fn get_type(&self) -> &str {
         "virt_ic::Clock1kHz"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         4
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 4 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
@@ -161,7 +161,7 @@ impl Chip for Clock1kHz {
         if self.active {
             self.active = false;
             self.pin[0].borrow_mut().state = State::Low;
-        } 
+        }
         // check alimented
         const LIMIT: Duration = Duration::from_millis(1);
         if self.pin[1].borrow().state == State::Low && self.pin[3].borrow().state == State::High {
@@ -174,14 +174,14 @@ impl Chip for Clock1kHz {
                 self.pin[0].borrow_mut().state = State::High;
             }
         } else {
-            self.timer = Duration::new(0,0);
+            self.timer = Duration::new(0, 0);
         }
     }
-    
+
     fn save_data(&self) -> Vec<String> {
         vec![
-            String::from(if self.active {"ON"} else {"OFF"}),
-            ron::to_string(&self.timer).unwrap()
+            String::from(if self.active { "ON" } else { "OFF" }),
+            ron::to_string(&self.timer).unwrap(),
         ]
     }
     fn load_data(&mut self, chip_data: &[String]) {

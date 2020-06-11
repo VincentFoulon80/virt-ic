@@ -1,4 +1,7 @@
-use super::{Trace, Socket, Chip, save::{SavedBoard, SavedSocket}};
+use super::{
+    save::{SavedBoard, SavedSocket},
+    Chip, Socket, Trace,
+};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -7,7 +10,7 @@ use std::time::{Duration, Instant};
 #[derive(Default, Debug)]
 pub struct Board {
     traces: Vec<Rc<RefCell<Trace>>>,
-    sockets: Vec<Rc<RefCell<Socket>>>
+    sockets: Vec<Rc<RefCell<Socket>>>,
 }
 
 impl Board {
@@ -15,7 +18,7 @@ impl Board {
     pub fn new() -> Board {
         Board {
             traces: vec![],
-            sockets: vec![]
+            sockets: vec![],
         }
     }
 
@@ -64,7 +67,7 @@ impl Board {
 
     /// Run the circuit for a certain amount of time
     /// You must use `use_during` since it provides more accurate simulation by stepping
-    pub fn run(&mut self, time_elapsed : Duration) {
+    pub fn run(&mut self, time_elapsed: Duration) {
         // TODO: find a way to update the traces accurately
         // current issue : the order of the traces affects the order of the links
         for trc in self.traces.iter_mut() {
@@ -78,7 +81,7 @@ impl Board {
     /// Run the circuit for a certain amount of time segmented by a step
     /// The smaller the step the more accurate the simulation will be.
     pub fn run_during(&mut self, duration: Duration, step: Duration) {
-        let mut elapsed = Duration::new(0,0);
+        let mut elapsed = Duration::new(0, 0);
         while elapsed < duration {
             self.run(step);
             elapsed += step;
@@ -113,7 +116,10 @@ impl Board {
 
         let file = std::fs::File::create(std::path::Path::new(filepath))?;
         if let Err(e) = ron::ser::to_writer(file, &s_board) {
-            Err(std::io::Error::new(std::io::ErrorKind::Interrupted, format!("{:?}", e)))
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Interrupted,
+                format!("{:?}", e),
+            ))
         } else {
             Ok(())
         }
@@ -124,10 +130,13 @@ impl Board {
     /// By default it's `virt_ic::chip::virt_ic_chip_factory`
     /// ```
     /// use virt_ic::chip::virt_ic_chip_factory;
-    /// 
+    ///
     /// let mut board = Board::load("my_saved_board.ron", &virt_ic_chip_factory).unwrap();
     /// ```
-    pub fn load(filepath: &str, chip_factory: &dyn Fn(&str) -> Option<Box<dyn Chip>>) -> std::io::Result<Board> {
+    pub fn load(
+        filepath: &str,
+        chip_factory: &dyn Fn(&str) -> Option<Box<dyn Chip>>,
+    ) -> std::io::Result<Board> {
         let file = std::fs::File::open(std::path::Path::new(filepath))?;
         let s_board: SavedBoard = ron::de::from_reader(file).unwrap();
         Ok(s_board.build_board(chip_factory))

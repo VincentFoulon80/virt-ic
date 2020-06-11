@@ -1,20 +1,20 @@
-pub mod chip;
-mod trace;
 mod board;
-mod socket;
+pub mod chip;
 mod save;
-pub use chip::{Chip, Pin, PinType};
+mod socket;
+mod trace;
 pub use board::Board;
-pub use trace::Trace;
+pub use chip::{Chip, Pin, PinType};
+use serde::{Deserialize, Serialize};
 pub use socket::Socket;
-use serde::{Serialize, Deserialize};
+pub use trace::Trace;
 
 /// Current's State
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum State {
     Undefined,
     High,
-    Low
+    Low,
 }
 
 impl From<bool> for State {
@@ -55,14 +55,14 @@ impl State {
     pub fn as_bool(&self) -> bool {
         match self {
             State::High => true,
-            _ => false
+            _ => false,
         }
     }
 
     pub fn as_u8(&self) -> u8 {
         match self {
             State::High => 1,
-            _ => 0
+            _ => 0,
         }
     }
 }

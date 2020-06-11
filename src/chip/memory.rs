@@ -1,12 +1,12 @@
 //! Readable and/or Writable Memory Chips
+use super::{Chip, Pin, PinType};
 use crate::State;
-use super::{Pin, PinType, Chip};
+use rand::random;
 use std::cell::RefCell;
 use std::rc::Rc;
-use rand::random;
 
 /// # A 256-bytes RAM chip
-/// 
+///
 /// # Diagram
 /// CS: Chip Select (active low)
 /// WE: Write Enable (active low)
@@ -32,7 +32,7 @@ pub struct Ram256B {
     uuid: u128,
     pin: [Rc<RefCell<Pin>>; 22],
     ram: [u8; 256],
-    powered: bool
+    powered: bool,
 }
 impl Default for Ram256B {
     fn default() -> Self {
@@ -45,9 +45,17 @@ impl std::fmt::Debug for Ram256B {
         fmt.write_str(self.to_string().as_str())?;
         fmt.write_str(format!("\naddress: {:02X}", self.get_address()).as_str())?;
         fmt.write_str(format!("\ndata: {:02X}", self.ram[self.get_address() as usize]).as_str())?;
-        fmt.write_str(format!("\nCS: {}\tWE: {}\tOE: {}", !self.pin[0].borrow().state.as_bool(), !self.pin[1].borrow().state.as_bool(), !self.pin[2].borrow().state.as_bool()).as_str())?;
+        fmt.write_str(
+            format!(
+                "\nCS: {}\tWE: {}\tOE: {}",
+                !self.pin[0].borrow().state.as_bool(),
+                !self.pin[1].borrow().state.as_bool(),
+                !self.pin[2].borrow().state.as_bool()
+            )
+            .as_str(),
+        )?;
         fmt.write_str("\n----------")?;
-        
+
         Ok(())
     }
 }
@@ -83,7 +91,7 @@ impl Ram256B {
     pub const IO7: u8 = 20;
     pub const VCC: u8 = 22;
     pub const GND: u8 = 11;
-    
+
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
         Ram256B {
@@ -110,20 +118,28 @@ impl Ram256B {
                 Rc::new(RefCell::new(Pin::new(uuid, 19, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 20, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 21, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input))),
             ],
             ram: [0; 256],
-            powered: false
+            powered: false,
         }
     }
 
     fn get_address(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 3..10 {
-            let bit = if self.pin[i].borrow().state == State::High {1} else {0};
-            addr += bit << (i-3);
+            let bit = if self.pin[i].borrow().state == State::High {
+                1
+            } else {
+                0
+            };
+            addr += bit << (i - 3);
         }
-        let bit = if self.pin[11].borrow().state == State::High {1} else {0};
+        let bit = if self.pin[11].borrow().state == State::High {
+            1
+        } else {
+            0
+        };
         addr += bit << 7;
         addr
     }
@@ -131,8 +147,12 @@ impl Ram256B {
     fn get_data(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 12..20 {
-            let bit = if self.pin[i].borrow().state == State::High {1} else {0};
-            addr += bit << (i-12);
+            let bit = if self.pin[i].borrow().state == State::High {
+                1
+            } else {
+                0
+            };
+            addr += bit << (i - 12);
         }
         addr
     }
@@ -144,13 +164,13 @@ impl Chip for Ram256B {
     fn get_type(&self) -> &str {
         "virt_ic::Ram256B"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         22
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 22 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
@@ -198,7 +218,7 @@ impl Chip for Ram256B {
                     self.pin[18].borrow_mut().state = State::from_u8(self.ram[addr], 6);
                     self.pin[19].borrow_mut().state = State::from_u8(self.ram[addr], 7);
                 }
-                //println!();
+            //println!();
             } else {
                 // IO : undefined
                 for i in 12..20 {
@@ -217,7 +237,7 @@ impl Chip for Ram256B {
     fn save_data(&self) -> Vec<String> {
         vec![
             ron::to_string(&self.ram.to_vec()).unwrap(),
-            String::from(if self.powered {"ON"} else {"OFF"})
+            String::from(if self.powered { "ON" } else { "OFF" }),
         ]
     }
     fn load_data(&mut self, chip_data: &[String]) {
@@ -228,7 +248,7 @@ impl Chip for Ram256B {
 }
 
 /// # A 256-bytes ROM chip
-/// 
+///
 /// # Diagram
 /// CS: Chip Select (active low)
 /// OE: Output Enable (active low)
@@ -265,7 +285,14 @@ impl std::fmt::Debug for Rom256B {
         fmt.write_str(self.to_string().as_str())?;
         fmt.write_str(format!("\naddress: {:02X}", self.get_address()).as_str())?;
         fmt.write_str(format!("\ndata: {:02X}", self.rom[self.get_address() as usize]).as_str())?;
-        fmt.write_str(format!("\nCS: {}\tOE: {}", !self.pin[0].borrow().state.as_bool(), !self.pin[2].borrow().state.as_bool()).as_str())?;
+        fmt.write_str(
+            format!(
+                "\nCS: {}\tOE: {}",
+                !self.pin[0].borrow().state.as_bool(),
+                !self.pin[2].borrow().state.as_bool()
+            )
+            .as_str(),
+        )?;
         fmt.write_str("\n----------")?;
         Ok(())
     }
@@ -328,29 +355,37 @@ impl Rom256B {
                 Rc::new(RefCell::new(Pin::new(uuid, 19, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 20, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 21, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input))),
             ],
             rom: [0; 256],
         }
     }
 
-    pub fn from_data(data: [u8;256]) -> Rom256B {
+    pub fn from_data(data: [u8; 256]) -> Rom256B {
         let mut rom = Rom256B::new();
         rom.load_data(data);
         rom
     }
 
-    pub fn load_data(&mut self, data: [u8;256]) {
+    pub fn load_data(&mut self, data: [u8; 256]) {
         self.rom.clone_from_slice(&data);
     }
 
     fn get_address(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 3..10 {
-            let bit = if self.pin[i].borrow().state == State::High {1} else {0};
-            addr += bit << (i-3);
+            let bit = if self.pin[i].borrow().state == State::High {
+                1
+            } else {
+                0
+            };
+            addr += bit << (i - 3);
         }
-        let bit = if self.pin[11].borrow().state == State::High {1} else {0};
+        let bit = if self.pin[11].borrow().state == State::High {
+            1
+        } else {
+            0
+        };
         addr += bit << 7;
         addr
     }
@@ -363,13 +398,13 @@ impl Chip for Rom256B {
         "virt_ic::Rom256B"
     }
 
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         22
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 22 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
@@ -398,7 +433,7 @@ impl Chip for Rom256B {
                     self.pin[18].borrow_mut().state = State::from_u8(self.rom[addr], 6);
                     self.pin[19].borrow_mut().state = State::from_u8(self.rom[addr], 7);
                 }
-                //println!();
+            //println!();
             } else {
                 // IO : undefined
                 for i in 12..20 {
@@ -414,9 +449,7 @@ impl Chip for Rom256B {
     }
 
     fn save_data(&self) -> Vec<String> {
-        vec![
-            ron::to_string(&self.rom.to_vec()).unwrap()
-        ]
+        vec![ron::to_string(&self.rom.to_vec()).unwrap()]
     }
     fn load_data(&mut self, chip_data: &[String]) {
         let data: Vec<u8> = ron::from_str(&chip_data[0]).unwrap();

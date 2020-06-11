@@ -1,11 +1,11 @@
 //! Logic Gates like OR, AND, NOT ...
+use super::{Chip, Pin, PinType};
 use crate::State;
-use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 /// # A chip with 4 bundled "OR" gates
-/// 
+///
 /// # Diagram
 /// ```
 ///        ---__---
@@ -63,8 +63,8 @@ impl GateOr {
                 Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input)))
-            ]
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input))),
+            ],
         }
     }
 }
@@ -75,28 +75,52 @@ impl Chip for GateOr {
     fn get_type(&self) -> &str {
         "virt_ic::GateOr"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         14
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 14 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
     }
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
-        if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {  
-            // A && B    
-            self.pin[2].borrow_mut().state = if self.pin[0].borrow().state == State::High || self.pin[1].borrow().state == State::High {State::High} else {State::Low};
+        if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {
+            // A && B
+            self.pin[2].borrow_mut().state = if self.pin[0].borrow().state == State::High
+                || self.pin[1].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
             // C && D
-            self.pin[5].borrow_mut().state = if self.pin[3].borrow().state == State::High || self.pin[4].borrow().state == State::High {State::High} else {State::Low};
-            // E && F 
-            self.pin[10].borrow_mut().state = if self.pin[11].borrow().state == State::High || self.pin[12].borrow().state == State::High {State::High} else {State::Low};
-            // G && H 
-            self.pin[7].borrow_mut().state = if self.pin[8].borrow().state == State::High || self.pin[9].borrow().state == State::High {State::High} else {State::Low};
+            self.pin[5].borrow_mut().state = if self.pin[3].borrow().state == State::High
+                || self.pin[4].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
+            // E && F
+            self.pin[10].borrow_mut().state = if self.pin[11].borrow().state == State::High
+                || self.pin[12].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
+            // G && H
+            self.pin[7].borrow_mut().state = if self.pin[8].borrow().state == State::High
+                || self.pin[9].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
         } else {
             // turn off every pin
             for i in 0..14 {
@@ -106,9 +130,8 @@ impl Chip for GateOr {
     }
 }
 
-
 /// # A chip with 4 bundled "AND" gates
-/// 
+///
 /// # Diagram
 /// ```
 ///        ---__---
@@ -166,8 +189,8 @@ impl GateAnd {
                 Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input)))
-            ]
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input))),
+            ],
         }
     }
 }
@@ -178,28 +201,52 @@ impl Chip for GateAnd {
     fn get_type(&self) -> &str {
         "virt_ic::GateAnd"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         14
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 14 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
     }
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
-        if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {   
-            // A && B  
-            self.pin[2].borrow_mut().state = if self.pin[0].borrow().state == State::High && self.pin[1].borrow().state == State::High {State::High} else {State::Low};
+        if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {
+            // A && B
+            self.pin[2].borrow_mut().state = if self.pin[0].borrow().state == State::High
+                && self.pin[1].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
             // C && D
-            self.pin[5].borrow_mut().state = if self.pin[3].borrow().state == State::High && self.pin[4].borrow().state == State::High {State::High} else {State::Low};
+            self.pin[5].borrow_mut().state = if self.pin[3].borrow().state == State::High
+                && self.pin[4].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
             // E && F
-            self.pin[10].borrow_mut().state = if self.pin[11].borrow().state == State::High && self.pin[12].borrow().state == State::High {State::High} else {State::Low};
+            self.pin[10].borrow_mut().state = if self.pin[11].borrow().state == State::High
+                && self.pin[12].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
             // G && H
-            self.pin[7].borrow_mut().state = if self.pin[8].borrow().state == State::High && self.pin[9].borrow().state == State::High {State::High} else {State::Low};
+            self.pin[7].borrow_mut().state = if self.pin[8].borrow().state == State::High
+                && self.pin[9].borrow().state == State::High
+            {
+                State::High
+            } else {
+                State::Low
+            };
         } else {
             // turn off every pin
             for i in 0..14 {
@@ -210,7 +257,7 @@ impl Chip for GateAnd {
 }
 
 /// # A chip with 6 bundled "NOT" gates
-/// 
+///
 /// # Diagram
 /// ```
 ///        ---__---
@@ -268,8 +315,8 @@ impl GateNot {
                 Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input)))
-            ]
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input))),
+            ],
         }
     }
 }
@@ -280,32 +327,56 @@ impl Chip for GateNot {
     fn get_type(&self) -> &str {
         "virt_ic::GateNot"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         14
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 14 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
     }
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
-        if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {   
-            // !A 
-            self.pin[1].borrow_mut().state = if self.pin[0].borrow().state == State::High {State::Low} else {State::High};
+        if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {
+            // !A
+            self.pin[1].borrow_mut().state = if self.pin[0].borrow().state == State::High {
+                State::Low
+            } else {
+                State::High
+            };
             // !B
-            self.pin[3].borrow_mut().state = if self.pin[2].borrow().state == State::High {State::Low} else {State::High};
-            // !C 
-            self.pin[5].borrow_mut().state = if self.pin[4].borrow().state == State::High {State::Low} else {State::High};
-            // !D 
-            self.pin[11].borrow_mut().state = if self.pin[12].borrow().state == State::High {State::Low} else {State::High};
-            // !E 
-            self.pin[9].borrow_mut().state = if self.pin[10].borrow().state == State::High {State::Low} else {State::High};
-            // !F 
-            self.pin[7].borrow_mut().state = if self.pin[8].borrow().state == State::High {State::Low} else {State::High};
+            self.pin[3].borrow_mut().state = if self.pin[2].borrow().state == State::High {
+                State::Low
+            } else {
+                State::High
+            };
+            // !C
+            self.pin[5].borrow_mut().state = if self.pin[4].borrow().state == State::High {
+                State::Low
+            } else {
+                State::High
+            };
+            // !D
+            self.pin[11].borrow_mut().state = if self.pin[12].borrow().state == State::High {
+                State::Low
+            } else {
+                State::High
+            };
+            // !E
+            self.pin[9].borrow_mut().state = if self.pin[10].borrow().state == State::High {
+                State::Low
+            } else {
+                State::High
+            };
+            // !F
+            self.pin[7].borrow_mut().state = if self.pin[8].borrow().state == State::High {
+                State::Low
+            } else {
+                State::High
+            };
         } else {
             // turn off every pin
             for i in 0..14 {

@@ -5,7 +5,7 @@ use virt_ic::State;
 fn main() {
     // create a new Ram chip
     let mut ram = Ram256B::new();
-    
+
     // initial run to initalize pins
     ram.run(std::time::Duration::from_secs(1));
     println!("non alimented:\n{}", ram.to_string());
@@ -54,10 +54,11 @@ fn main() {
     ram.set_pin_state(Ram256B::CS, &State::Low);
     ram.set_pin_state(Ram256B::WE, &State::High);
     ram.set_pin_state(Ram256B::OE, &State::Low);
-    
+
     // run the chip and read its IO pins
     ram.run(std::time::Duration::from_secs(1));
-    println!("read second byte:\n{}{}{}{}{}{}{}{}", 
+    println!(
+        "read second byte:\n{}{}{}{}{}{}{}{}",
         ram.get_pin_state(Ram256B::IO7).as_u8(),
         ram.get_pin_state(Ram256B::IO6).as_u8(),
         ram.get_pin_state(Ram256B::IO5).as_u8(),
@@ -73,7 +74,8 @@ fn main() {
     ram.set_pin_state(Ram256B::A1, &State::High);
     // run the chip and read its IO pins
     ram.run(std::time::Duration::from_secs(1));
-    println!("read third byte:\n{}{}{}{}{}{}{}{}", 
+    println!(
+        "read third byte:\n{}{}{}{}{}{}{}{}",
         ram.get_pin_state(Ram256B::IO7).as_u8(),
         ram.get_pin_state(Ram256B::IO6).as_u8(),
         ram.get_pin_state(Ram256B::IO5).as_u8(),

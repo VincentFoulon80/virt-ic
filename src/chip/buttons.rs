@@ -1,13 +1,13 @@
 //! Buttons and other physically interactable chips
+use super::{Chip, Pin, PinType};
 use crate::State;
-use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-/// # A simple button 
+/// # A simple button
 /// Transmit the IN signal in the OUT pin when he is down
 /// you'll need to use `press()` and `release()` to change its state
-/// 
+///
 /// # Diagram
 /// ```
 ///        --------
@@ -18,7 +18,7 @@ use std::rc::Rc;
 pub struct Button {
     uuid: u128,
     pin: [Rc<RefCell<Pin>>; 2],
-    down: bool
+    down: bool,
 }
 impl Default for Button {
     fn default() -> Self {
@@ -38,7 +38,7 @@ impl Button {
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
             ],
-            down: false
+            down: false,
         }
     }
 
@@ -57,13 +57,13 @@ impl Chip for Button {
     fn get_type(&self) -> &str {
         "virt_ic::Button"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         2
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 2 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
@@ -77,9 +77,7 @@ impl Chip for Button {
     }
 
     fn save_data(&self) -> Vec<String> {
-        vec![
-            String::from(if self.down {"DOWN"} else {"UP"}),
-        ]
+        vec![String::from(if self.down { "DOWN" } else { "UP" })]
     }
     fn load_data(&mut self, chip_data: &[String]) {
         self.down = chip_data[0] == "DOWN";

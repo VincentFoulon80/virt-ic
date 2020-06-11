@@ -10,15 +10,11 @@ pub struct Socket {
 
 impl Socket {
     pub fn new() -> Socket {
-        Socket {
-            chip: None
-        }
+        Socket { chip: None }
     }
 
     pub fn with(chip: Box<dyn Chip>) -> Socket {
-        Socket {
-            chip: Some(chip)
-        }
+        Socket { chip: Some(chip) }
     }
 
     pub fn plug(&mut self, chip: Box<dyn Chip>) {
@@ -49,7 +45,7 @@ impl Socket {
         if let Some(chip) = self.chip.as_mut() {
             if let Ok(pin) = chip.get_pin(pin) {
                 pin.borrow_mut().pin_type = pin_type.clone();
-            } 
+            }
         }
     }
 }

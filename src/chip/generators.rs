@@ -1,11 +1,11 @@
 //! Generators that provide fixed currents
+use super::{Chip, Pin, PinType};
 use crate::State;
-use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 /// # A simple generator providing VCC and GND
-/// 
+///
 /// # Diagram
 /// ```
 ///        --------
@@ -26,7 +26,7 @@ impl Default for Generator {
 impl Generator {
     pub const VCC: u8 = 1;
     pub const GND: u8 = 2;
-    
+
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
         let gen = Generator {
@@ -34,7 +34,7 @@ impl Generator {
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
                 Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
-            ]
+            ],
         };
         gen.pin[0].borrow_mut().state = State::High;
         gen.pin[1].borrow_mut().state = State::Low;
@@ -44,17 +44,17 @@ impl Generator {
 impl Chip for Generator {
     fn get_uuid(&self) -> u128 {
         self.uuid
-    } 
+    }
     fn get_type(&self) -> &str {
         "virt_ic::Generator"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         2
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 2 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }

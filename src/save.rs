@@ -1,8 +1,7 @@
-use serde::{Serialize, Deserialize};
-use super::{Pin, Board, Chip, Socket};
-use std::rc::Rc;
+use super::{Board, Chip, Pin, Socket};
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-
+use std::rc::Rc;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SavedChip {
@@ -13,29 +12,24 @@ pub struct SavedChip {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SavedSocket {
-    pub chip: Option<SavedChip>
+    pub chip: Option<SavedChip>,
 }
 impl SavedSocket {
     pub fn new() -> SavedSocket {
-        SavedSocket {
-            chip: None
-        }
+        SavedSocket { chip: None }
     }
     pub fn set_chip(&mut self, chip: SavedChip) {
         self.chip = Some(chip)
     }
 }
 
-
 #[derive(Default, Debug, Serialize, Deserialize)]
 pub struct SavedTrace {
-    pub pins: Vec<Pin>
+    pub pins: Vec<Pin>,
 }
 impl SavedTrace {
     pub fn new() -> SavedTrace {
-        SavedTrace {
-            pins: vec![]
-        }
+        SavedTrace { pins: vec![] }
     }
 
     pub fn add_trace(&mut self, pin: Pin) {
@@ -46,14 +40,14 @@ impl SavedTrace {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SavedBoard {
     sockets: Vec<SavedSocket>,
-    traces: Vec<SavedTrace>
+    traces: Vec<SavedTrace>,
 }
 
 impl SavedBoard {
     pub fn new() -> Self {
-        SavedBoard{
+        SavedBoard {
             sockets: vec![],
-            traces: vec![]
+            traces: vec![],
         }
     }
     pub fn add_trace(&mut self, trace: SavedTrace) {
@@ -83,9 +77,20 @@ impl SavedBoard {
             for s_pin in s_trace.pins.iter() {
                 for l_chip in loaded_chips.iter() {
                     if s_pin.parent == l_chip.0 {
-                        l_chip.1.borrow_mut().set_pin_state(s_pin.number, &s_pin.state);
-                        l_chip.1.borrow_mut().get_pin(s_pin.number).unwrap().borrow_mut().pin_type = s_pin.pin_type.clone();
-                        trace.borrow_mut().connect(l_chip.1.borrow_mut().get_pin(s_pin.number).unwrap().clone())
+                        l_chip
+                            .1
+                            .borrow_mut()
+                            .set_pin_state(s_pin.number, &s_pin.state);
+                        l_chip
+                            .1
+                            .borrow_mut()
+                            .get_pin(s_pin.number)
+                            .unwrap()
+                            .borrow_mut()
+                            .pin_type = s_pin.pin_type.clone();
+                        trace
+                            .borrow_mut()
+                            .connect(l_chip.1.borrow_mut().get_pin(s_pin.number).unwrap().clone())
                     }
                 }
             }

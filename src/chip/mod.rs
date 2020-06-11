@@ -1,15 +1,15 @@
 //! Chip trait, Pins and premade Chips
 use super::State;
 pub mod buttons;
+pub mod clocks;
+pub mod cpu;
 pub mod gates;
 pub mod generators;
 pub mod memory;
-pub mod cpu;
-pub mod clocks;
+use super::save::SavedChip;
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::rc::Rc;
-use serde::{Serialize, Deserialize};
-use super::save::SavedChip;
 
 /// The type of a Pin, that can be Input or Output
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -34,7 +34,7 @@ impl Pin {
             parent: parent_uuid,
             number,
             pin_type,
-            state: State::Undefined
+            state: State::Undefined,
         }
     }
 }
@@ -61,14 +61,14 @@ pub trait Chip: std::fmt::Debug {
     fn set_pin_state(&mut self, pin: u8, state: &State) {
         if let Ok(pin) = self.get_pin(pin) {
             pin.borrow_mut().state = state.clone();
-        } 
+        }
     }
 
     fn save(&self) -> SavedChip {
         SavedChip {
             uuid: self.get_uuid(),
             chip_type: String::from(self.get_type()),
-            chip_data: self.save_data()
+            chip_data: self.save_data(),
         }
     }
 
@@ -95,6 +95,6 @@ pub fn virt_ic_chip_factory(chip_name: &str) -> Option<Box<dyn Chip>> {
         "virt_ic::Generator" => Some(Box::new(generators::Generator::new())),
         "virt_ic::Ram256B" => Some(Box::new(memory::Ram256B::new())),
         "virt_ic::Rom256B" => Some(Box::new(memory::Rom256B::new())),
-        _ => None
+        _ => None,
     }
 }

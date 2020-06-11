@@ -1,6 +1,6 @@
 //! Central Processing Units
+use super::{Chip, Pin, PinType};
 use crate::State;
-use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -9,22 +9,22 @@ use std::rc::Rc;
 /// - 8-bit IO Pins
 /// - 3 data register (Accumulator, B and C)
 /// - 2 address registers (H and L forming the full address HL)
-/// 
+///
 /// # Instructions
-/// 
+///
 /// On startup or RESET, the CPU will fetch the boot address at 0xFFD and 0xFFE.  
 /// The Addresses are stored in this order : MSD, LSD, so 0x0F and 0x12 will create address 0xF12.
-/// 
+///
 /// The stack pointer will be initialized in the bank specified at 0xFFF.  
 /// If 0xFFF contains 0x0E, the CPU will use 0x0E00 to 0x0EFF for his stack.  
 /// Note that the bank can't go beyond 0x0F since the CPU only has a 12-bit address space.   
-/// 
+///
 /// TODO: Implement IRQ  
 /// On IRQ, the CPU will fetch the Interrupt code address at 0xFFB and 0xFFC.  
 /// When IRQ is triggered, the Address at 0xFFC and 0xFFD will be used as a JSR opcode.  
 /// To return to the main code, you'll just need to execute a RTN opcode.  
-/// 
-/// 
+///
+///
 /// # Opcodes
 /// MSD\LSD| x0| x1| x2| x3| x4| x5| x6| x7| x8| x9| xA| xB| xC| xD| xE| xF|   |
 /// -------|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -45,7 +45,7 @@ use std::rc::Rc;
 /// Ex     |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | Ex|
 /// Fx     |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | Fx|
 /// -      | x0| x1| x2| x3| x4| x5| x6| x7| x8| x9| xA| xB| xC| xD| xE| xF|   |
-/// 
+///
 /// Opcode|Parameters|Description|
 /// ------|----------|-----------|
 /// HLT (0x00) | - |Halts the CPU|
@@ -117,7 +117,7 @@ use std::rc::Rc;
 /// - | - | - |
 /// LDA (0xC0) | $1$2: address| Load the value of address $1$2 in the accumulator
 /// STA (0xC1) | $1$2: address| Store the value of accumulator into address $1$2
-/// 
+///
 /// # diagram
 /// IRQ: Interrupt Request (active low)
 /// RESET: Reset (active low)
@@ -163,7 +163,7 @@ pub struct SimpleCPU {
     microcode_state: u8,
     executing: bool,
     initializing: bool,
-    halted: bool
+    halted: bool,
 }
 impl Default for SimpleCPU {
     fn default() -> Self {
@@ -235,7 +235,7 @@ impl SimpleCPU {
                 Rc::new(RefCell::new(Pin::new(uuid, 23, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 24, PinType::Input))),
                 Rc::new(RefCell::new(Pin::new(uuid, 25, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(uuid, 26, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 26, PinType::Input))),
             ],
             program_counter: 0,
             accumulator: 0,
@@ -255,14 +255,18 @@ impl SimpleCPU {
             microcode_state: 0,
             executing: false,
             initializing: true,
-            halted: false
+            halted: false,
         }
     }
 
     fn get_address(&self) -> u16 {
         let mut addr: u16 = 0;
         for i in 0..12 {
-            let bit = if self.pin[i].borrow().state == State::High {1} else {0};
+            let bit = if self.pin[i].borrow().state == State::High {
+                1
+            } else {
+                0
+            };
             addr += bit << i;
         }
         addr
@@ -283,8 +287,12 @@ impl SimpleCPU {
     fn get_data(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 16..24 {
-            let bit = if self.pin[i].borrow().state == State::High {1} else {0};
-            addr += bit << (i-16);
+            let bit = if self.pin[i].borrow().state == State::High {
+                1
+            } else {
+                0
+            };
+            addr += bit << (i - 16);
         }
         addr
     }
@@ -292,7 +300,7 @@ impl SimpleCPU {
     fn set_data(&mut self, data: u8) {
         // set the IO pins
         for i in 0..8 {
-            let mut pin = self.pin[i+16].borrow_mut();
+            let mut pin = self.pin[i + 16].borrow_mut();
             pin.pin_type = PinType::Output;
             pin.state = State::from_u8(data, i);
         }
@@ -303,18 +311,18 @@ impl SimpleCPU {
     fn set_iopin_type(&mut self, pin_type: PinType) {
         // set IO pins
         for i in 0..8 {
-            self.pin[i+16].borrow_mut().pin_type = pin_type.clone();
+            self.pin[i + 16].borrow_mut().pin_type = pin_type.clone();
         }
         // set R/!W pin
         self.pin[24].borrow_mut().state = match pin_type {
             PinType::Input => State::High,
             PinType::Output => State::Low,
-            PinType::Undefined => State::Undefined
+            PinType::Undefined => State::Undefined,
         }
     }
 
     /// CPU's boot sequence
-    fn boot(&mut self){
+    fn boot(&mut self) {
         match self.microcode_state {
             0 => {
                 // initialize registers
@@ -327,27 +335,27 @@ impl SimpleCPU {
                 self.reg_h = 0;
                 self.reg_l = 0;
                 self.set_address(0xFFD);
-            },
+            }
             1 => {
                 // get first part of starting address
                 // + query LSB address
                 self.program_counter += (self.get_data() as u16) << 8;
                 self.program_counter &= 0xFFF;
                 self.set_address(0xFFE);
-            },
+            }
             2 => {
                 // get second part of starting address
                 // + query Stack pointer bank
                 self.program_counter += self.get_data() as u16;
                 self.set_address(0xFFF);
-            },
+            }
             3 => {
                 // get stack bank and stop the init process
                 self.stack_bank = self.get_data();
                 self.stack_pointer = 0xFF;
                 self.initializing = false;
                 self.microcode_state = 0xFF;
-            },
+            }
             _ => {
                 self.initializing = false;
                 self.microcode_state = 0xFF;
@@ -379,24 +387,28 @@ impl SimpleCPU {
         };
 
         match self.current_opcode {
-            0x00 => { // HLT : Halt
+            0x00 => {
+                // HLT : Halt
                 self.halted = true;
-            },
-            0x01 => { // INA : Increment Acc
+            }
+            0x01 => {
+                // INA : Increment Acc
                 self.accumulator = self.accumulator.wrapping_add(1);
                 if self.accumulator == 0 {
                     self.flag_overflow = true;
                     self.flag_neg = false;
                 }
             }
-            0x02 => { // DEA : Decrement Acc 
+            0x02 => {
+                // DEA : Decrement Acc
                 self.accumulator = self.accumulator.wrapping_sub(1);
                 if self.accumulator == 0xFF {
                     self.flag_overflow = false;
                     self.flag_neg = true;
                 }
-            },
-            0x03 => { // INL : Increment HL 
+            }
+            0x03 => {
+                // INL : Increment HL
                 let mut hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                 hl = hl.wrapping_add(1);
                 if hl == 0 {
@@ -405,8 +417,9 @@ impl SimpleCPU {
                 }
                 self.reg_h = (hl >> 8) as u8;
                 self.reg_l = (hl & 0xFF) as u8;
-            },
-            0x04 => { // DEL : Decrement HL 
+            }
+            0x04 => {
+                // DEL : Decrement HL
                 let mut hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                 hl = hl.wrapping_sub(1);
                 if hl == 0xFFFF {
@@ -415,424 +428,487 @@ impl SimpleCPU {
                 }
                 self.reg_h = (hl >> 8) as u8;
                 self.reg_l = (hl & 0xFF) as u8;
-            },
-            0x05 => { // CLC : Clear Carry
+            }
+            0x05 => {
+                // CLC : Clear Carry
                 self.flag_carry = false;
-            },
-            0x06 => { // ADB : Add B to Acc
+            }
+            0x06 => {
+                // ADB : Add B to Acc
                 let add = self.accumulator as u16 + self.reg_b as u16;
                 if add > u8::MAX as u16 {
                     self.flag_carry = true;
                     self.flag_overflow = true;
                 }
                 self.accumulator = self.accumulator.wrapping_add(self.reg_b);
-            },
-            0x07 => { // ADC : Add C to Acc
+            }
+            0x07 => {
+                // ADC : Add C to Acc
                 let add = self.accumulator as u16 + self.reg_c as u16;
                 if add > u8::MAX as u16 {
                     self.flag_carry = true;
                     self.flag_overflow = true;
                 }
                 self.accumulator = self.accumulator.wrapping_add(self.reg_c);
-            },
-            0x08 => { // TAB : Transfer Acc > B
+            }
+            0x08 => {
+                // TAB : Transfer Acc > B
                 self.reg_b = self.accumulator;
-            },
-            0x09 => { // TBA : Transfer B > Acc
+            }
+            0x09 => {
+                // TBA : Transfer B > Acc
                 self.accumulator = self.reg_b;
-            },
-            0x0A => { // TAC : Transfer Acc > C
+            }
+            0x0A => {
+                // TAC : Transfer Acc > C
                 self.reg_c = self.accumulator;
-            },
-            0x0B => { // TCA : Transfer C > Acc
+            }
+            0x0B => {
+                // TCA : Transfer C > Acc
                 self.accumulator = self.reg_c;
-            },
-            0x0C => { // TAH : Transfer Acc > H
+            }
+            0x0C => {
+                // TAH : Transfer Acc > H
                 self.reg_h = self.accumulator;
-            },
-            0x0D => { // THA : Transfer H > Acc
+            }
+            0x0D => {
+                // THA : Transfer H > Acc
                 self.accumulator = self.reg_h;
-            },
-            0x0E => { // TAL : Transfer Acc > L
+            }
+            0x0E => {
+                // TAL : Transfer Acc > L
                 self.reg_l = self.accumulator;
-            },
-            0x0F => { // TLA : Transfer L > Acc
+            }
+            0x0F => {
+                // TLA : Transfer L > Acc
                 self.accumulator = self.reg_l;
-            },
-            0x10 => { // PHA : Push Acc
+            }
+            0x10 => {
+                // PHA : Push Acc
                 push_stack(self, self.accumulator);
-            },
-            0x11 => { // PLA : Pull Acc
+            }
+            0x11 => {
+                // PLA : Pull Acc
                 match self.microcode_state {
                     0 => {
                         req_pull_stack(self);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
                     }
                     _ => {}
                 }
-            },
-            0x12 => { // PHL : Push HL
+            }
+            0x12 => {
+                // PHL : Push HL
                 match self.microcode_state {
                     0 => {
                         push_stack(self, self.reg_l);
                         self.executing = true;
-                    },
-                    1 => {
-                        push_stack(self, self.reg_h)
                     }
+                    1 => push_stack(self, self.reg_h),
                     _ => {}
                 }
-            },
-            0x13 => { // PLL : Pull HL
+            }
+            0x13 => {
+                // PLL : Pull HL
                 match self.microcode_state {
                     0 => {
                         req_pull_stack(self);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.reg_h = self.get_data();
                         req_pull_stack(self);
                         self.executing = true;
-                    },
+                    }
                     2 => {
                         self.reg_l = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x14 => { // CPB : Compare B with Acc
+            }
+            0x14 => {
+                // CPB : Compare B with Acc
                 check_zero = false;
                 let compare = self.accumulator as i16 - self.reg_b as i16;
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
-            },
-            0x15 => { // CPC : Compare C with Acc
+            }
+            0x15 => {
+                // CPC : Compare C with Acc
                 check_zero = false;
                 let compare = self.accumulator as i16 - self.reg_c as i16;
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
-            },
-            0x16 => { // SUB : Substract B to Acc
+            }
+            0x16 => {
+                // SUB : Substract B to Acc
                 let sub = self.accumulator as i16 - self.reg_b as i16;
                 self.flag_neg = sub < 0;
                 self.accumulator -= self.reg_b;
-            },
-            0x17 => { // SUC : Substract C with Acc
+            }
+            0x17 => {
+                // SUC : Substract C with Acc
                 let sub = self.accumulator as i16 - self.reg_c as i16;
                 self.flag_neg = sub < 0;
                 self.accumulator -= self.reg_c;
-            },
-            0x18 => { // SAL : Shift Acc left
+            }
+            0x18 => {
+                // SAL : Shift Acc left
                 self.accumulator <<= 1;
-            },
-            0x19 => { // SAR : Shift Acc Right
+            }
+            0x19 => {
+                // SAR : Shift Acc Right
                 self.accumulator >>= 1;
             }
-            0x1A => { // INB : Increment B
+            0x1A => {
+                // INB : Increment B
                 self.reg_b = self.reg_b.wrapping_add(1);
                 if self.reg_b == 0 {
                     self.flag_overflow = true;
                     self.flag_neg = false;
                 }
             }
-            0x1B => { // DEB : Decrement B 
+            0x1B => {
+                // DEB : Decrement B
                 self.reg_b = self.reg_b.wrapping_sub(1);
                 if self.reg_b == 0xFF {
                     self.flag_overflow = false;
                     self.flag_neg = true;
                 }
-            },
-            0x1C => { // INC : Increment C
+            }
+            0x1C => {
+                // INC : Increment C
                 self.reg_c = self.reg_c.wrapping_add(1);
                 if self.reg_c == 0 {
                     self.flag_overflow = true;
                     self.flag_neg = false;
                 }
             }
-            0x1D => { // DEC : Decrement C 
+            0x1D => {
+                // DEC : Decrement C
                 self.reg_c = self.reg_c.wrapping_sub(1);
                 if self.reg_c == 0xFF {
                     self.flag_overflow = false;
                     self.flag_neg = true;
                 }
-            },
-            0x20 => { // JML : Jump to HL
+            }
+            0x20 => {
+                // JML : Jump to HL
                 self.program_counter = ((self.reg_h as u16) << 8) + self.reg_l as u16;
-            },
-            0x21 => { // JSL : Jump Subroutine to HL
+            }
+            0x21 => {
+                // JSL : Jump Subroutine to HL
                 match self.microcode_state {
                     0 => {
                         let addr_l = (self.program_counter & 0xFF) as u8;
                         push_stack(self, addr_l);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         let addr_h = (self.program_counter >> 8) as u8;
                         push_stack(self, addr_h);
                         self.program_counter = ((self.reg_h as u16) << 8) + self.reg_l as u16;
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x22 => { // RTN : Return Subroutine
+            }
+            0x22 => {
+                // RTN : Return Subroutine
                 match self.microcode_state {
                     0 => {
                         req_pull_stack(self);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.program_counter = 0;
                         self.program_counter += (self.get_data() as u16) << 8;
                         self.program_counter &= 0xFFF;
                         req_pull_stack(self);
                         self.executing = true;
-                    },
+                    }
                     2 => {
                         self.program_counter += self.get_data() as u16;
                     }
                     _ => {}
                 }
-            },
-            0x48 => { // STA [HL]: Store Acc in addr [HL]
+            }
+            0x48 => {
+                // STA [HL]: Store Acc in addr [HL]
                 let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                 self.set_address(hl);
                 self.set_data(self.accumulator);
-            },
-            0x49 => { // STB [HL]: Store B in addr [HL]
+            }
+            0x49 => {
+                // STB [HL]: Store B in addr [HL]
                 let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                 self.set_address(hl);
                 self.set_data(self.reg_b);
-            },
-            0x4A => { // STC [HL]: Store C in addr [HL]
+            }
+            0x4A => {
+                // STC [HL]: Store C in addr [HL]
                 let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                 self.set_address(hl);
                 self.set_data(self.reg_c);
-            },
-            0x4B => { // LDB [HL]: Load value of addr [HL] in B
+            }
+            0x4B => {
+                // LDB [HL]: Load value of addr [HL] in B
                 match self.microcode_state {
                     0 => {
                         let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                         self.set_address(hl);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.reg_b = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x4C => { // LDC [HL]: Load value of addr [HL] in C
+            }
+            0x4C => {
+                // LDC [HL]: Load value of addr [HL] in C
                 match self.microcode_state {
                     0 => {
                         let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                         self.set_address(hl);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.reg_c = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x4D => { // LDA [HL]: Load value of addr [HL] in Acc
+            }
+            0x4D => {
+                // LDA [HL]: Load value of addr [HL] in Acc
                 match self.microcode_state {
                     0 => {
                         let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                         self.set_address(hl);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x4E => { // LDA [HL+B]: Load value of addr [HL+B] in Acc
+            }
+            0x4E => {
+                // LDA [HL+B]: Load value of addr [HL+B] in Acc
                 match self.microcode_state {
                     0 => {
                         let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                         self.set_address(hl + self.reg_b as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x4F => { // LDA [HL+C]: Load value of addr [HL+C] in Acc
+            }
+            0x4F => {
+                // LDA [HL+C]: Load value of addr [HL+C] in Acc
                 match self.microcode_state {
                     0 => {
                         let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                         self.set_address(hl + self.reg_c as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x50 => { // LDA $1 : load $1 in Acc
+            }
+            0x50 => {
+                // LDA $1 : load $1 in Acc
                 self.accumulator = self.param_first;
-            },
-            0x51 => { // LDA [$1] : Zero page load to Acc
+            }
+            0x51 => {
+                // LDA [$1] : Zero page load to Acc
                 match self.microcode_state {
                     0 => {
                         self.set_address(self.param_first as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x52 => { // LDA [H$1] : Load [H$1] into Acc
+            }
+            0x52 => {
+                // LDA [H$1] : Load [H$1] into Acc
                 match self.microcode_state {
                     0 => {
                         let h0 = (self.reg_h as u16) << 8;
                         self.set_address(h0 + self.param_first as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x53 => { // LDA [HL]+$1 : Load [HL]+$1 into Acc
+            }
+            0x53 => {
+                // LDA [HL]+$1 : Load [HL]+$1 into Acc
                 match self.microcode_state {
                     0 => {
                         let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                         self.set_address(hl + self.param_first as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x54 => { // LDB $1 : Load $1 into B
+            }
+            0x54 => {
+                // LDB $1 : Load $1 into B
                 self.reg_b = self.param_first
             }
-            0x55 => { // LDB [$1] : Zero page load to B
+            0x55 => {
+                // LDB [$1] : Zero page load to B
                 match self.microcode_state {
                     0 => {
                         self.set_address(self.param_first as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.reg_b = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x56 => { // LDC $1 : Load $1 into C
+            }
+            0x56 => {
+                // LDC $1 : Load $1 into C
                 self.reg_c = self.param_first
             }
-            0x57 => { // LDC [$1] : Zero page load to C
+            0x57 => {
+                // LDC [$1] : Zero page load to C
                 match self.microcode_state {
                     0 => {
                         self.set_address(self.param_first as u16);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.reg_c = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0x58 => { // STA [$1] : Zero page store Acc
+            }
+            0x58 => {
+                // STA [$1] : Zero page store Acc
                 self.set_address(self.param_first as u16);
                 self.set_data(self.accumulator);
-            },
-            0x59 => { // STA [H0+$1] : Store Acc to [H$1]
+            }
+            0x59 => {
+                // STA [H0+$1] : Store Acc to [H$1]
                 let h0 = (self.reg_h as u16) << 8;
                 self.set_address(h0 + self.param_first as u16);
                 self.set_data(self.accumulator);
-            },
-            0x5A => { // STA [HL+$1] : Store Acc to [HL+$1]
+            }
+            0x5A => {
+                // STA [HL+$1] : Store Acc to [HL+$1]
                 let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
                 self.set_address(hl + self.param_first as u16);
                 self.set_data(self.accumulator);
-            },
-            0x5B => { // STB [$1] : Zero page store B
+            }
+            0x5B => {
+                // STB [$1] : Zero page store B
                 self.set_address(self.param_first as u16);
                 self.set_data(self.reg_b);
-            },
-            0x5C => { // STC [$1] : Zero page store C
+            }
+            0x5C => {
+                // STC [$1] : Zero page store C
                 self.set_address(self.param_first as u16);
                 self.set_data(self.reg_c);
-            },
-            0x60 => { // CMP : compare Acc with $1
+            }
+            0x60 => {
+                // CMP : compare Acc with $1
                 check_zero = false;
                 let compare = self.accumulator as i16 - self.param_first as i16;
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
-            0x61 => { // CPB : compare B with $1
+            0x61 => {
+                // CPB : compare B with $1
                 check_zero = false;
                 let compare = self.reg_b as i16 - self.param_first as i16;
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
-            0x62 => { // CPC : compare C with $1
+            0x62 => {
+                // CPC : compare C with $1
                 check_zero = false;
                 let compare = self.reg_c as i16 - self.param_first as i16;
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
-            0xB0 => { // JMP : Jump to $1$2
+            0xB0 => {
+                // JMP : Jump to $1$2
                 self.program_counter = ((self.param_first as u16) << 8) + self.param_second as u16;
-            },
-            0xB1 => { // JSR : Jump Subroutine to $1$2
+            }
+            0xB1 => {
+                // JSR : Jump Subroutine to $1$2
                 match self.microcode_state {
                     0 => {
                         let addr_l = (self.program_counter & 0xFF) as u8;
                         push_stack(self, addr_l);
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         let addr_h = (self.program_counter >> 8) as u8;
                         push_stack(self, addr_h);
-                        self.program_counter = ((self.param_first as u16) << 8) + self.param_second as u16;
-                    },
+                        self.program_counter =
+                            ((self.param_first as u16) << 8) + self.param_second as u16;
+                    }
                     _ => {}
                 }
-            },
-            0xB2 => { // BCF : Branch on Carry flag to $1$2
+            }
+            0xB2 => {
+                // BCF : Branch on Carry flag to $1$2
                 if self.flag_carry {
-                    self.program_counter = ((self.param_first as u16) << 8) + self.param_second as u16;
+                    self.program_counter =
+                        ((self.param_first as u16) << 8) + self.param_second as u16;
                 }
-            },
-            0xB3 => { // BNF : Branch on Negative flag to $1$2
+            }
+            0xB3 => {
+                // BNF : Branch on Negative flag to $1$2
                 if self.flag_neg {
-                    self.program_counter = ((self.param_first as u16) << 8) + self.param_second as u16;
+                    self.program_counter =
+                        ((self.param_first as u16) << 8) + self.param_second as u16;
                 }
-            },
-            0xB4 => { // BZF : Branch on Zero flag to $1$2
+            }
+            0xB4 => {
+                // BZF : Branch on Zero flag to $1$2
                 if self.flag_zero {
-                    self.program_counter = ((self.param_first as u16) << 8) + self.param_second as u16;
+                    self.program_counter =
+                        ((self.param_first as u16) << 8) + self.param_second as u16;
                 }
-            },
-            0xC0 => { // LDA [$1$2] : load [$1$2] into Acc
+            }
+            0xC0 => {
+                // LDA [$1$2] : load [$1$2] into Acc
                 match self.microcode_state {
                     0 => {
-                        self.set_address(((self.param_first as u16) << 8) + self.param_second as u16);
+                        self.set_address(
+                            ((self.param_first as u16) << 8) + self.param_second as u16,
+                        );
                         self.executing = true;
-                    },
+                    }
                     1 => {
                         self.accumulator = self.get_data();
-                    },
+                    }
                     _ => {}
                 }
-            },
-            0xC1 => { // STA [$1$2] : store Acc into [$1$2]
+            }
+            0xC1 => {
+                // STA [$1$2] : store Acc into [$1$2]
                 self.set_address(self.param_first as u16);
                 self.set_data(self.accumulator);
             }
@@ -853,13 +929,13 @@ impl Chip for SimpleCPU {
     fn get_type(&self) -> &str {
         "virt_ic::SimpleCPU"
     }
-    fn get_pin_qty(&self) -> u8 { 
+    fn get_pin_qty(&self) -> u8 {
         26
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> { 
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if pin > 0 && pin <= 26 {
-            Ok(self.pin[pin as usize-1].clone())
+            Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
         }
@@ -894,7 +970,7 @@ impl Chip for SimpleCPU {
                             self.current_opcode = 0;
                             self.param_first = 0;
                             self.param_second = 0;
-                        },
+                        }
                         1 => {
                             self.current_opcode = self.get_data();
                             self.program_counter += 1;
@@ -904,7 +980,7 @@ impl Chip for SimpleCPU {
                             } else {
                                 launch_execution(self);
                             }
-                        },
+                        }
                         2 => {
                             if self.current_opcode >= 0x50 {
                                 self.param_first = self.get_data();
@@ -916,17 +992,16 @@ impl Chip for SimpleCPU {
                                     launch_execution(self);
                                 }
                             }
-                        },
+                        }
                         3 => {
                             if self.current_opcode >= 0xB0 {
                                 self.param_second = self.get_data();
                                 self.program_counter += 1;
                             }
                             launch_execution(self);
-                        },
+                        }
                         _ => {}
                     }
-                    
                 }
                 //println!("PC: {:03X}\tADR: {:03X}\tIO: {:02X}\tOp: {:02X}\t$1: {:02X}\t$2: {:02X}\tA: {:02X}\tB: {:02X}\tC: {:02X}\tH: {:02X}\tL: {:02X}\tSP: {:02X}\tmc: {}\texec: {}", self.program_counter, self.get_address(), self.get_data(), self.current_opcode, self.param_first, self.param_second, self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l, self.stack_pointer, self.microcode_state, self.executing);
                 self.microcode_state = self.microcode_state.wrapping_add(1);
@@ -945,18 +1020,45 @@ impl Chip for SimpleCPU {
 
     fn save_data(&self) -> Vec<String> {
         vec![
-            ron::to_string(&(self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l)).unwrap(),
-            ron::to_string(&(self.flag_zero, self.flag_neg, self.flag_carry, self.flag_overflow)).unwrap(),
-            ron::to_string(&(self.program_counter, self.stack_bank, self.stack_pointer, self.current_opcode, self.param_first, self.param_second)).unwrap(),
-            ron::to_string(&(self.microcode_state, self.executing, self.initializing, self.halted)).unwrap()
+            ron::to_string(&(
+                self.accumulator,
+                self.reg_b,
+                self.reg_c,
+                self.reg_h,
+                self.reg_l,
+            ))
+            .unwrap(),
+            ron::to_string(&(
+                self.flag_zero,
+                self.flag_neg,
+                self.flag_carry,
+                self.flag_overflow,
+            ))
+            .unwrap(),
+            ron::to_string(&(
+                self.program_counter,
+                self.stack_bank,
+                self.stack_pointer,
+                self.current_opcode,
+                self.param_first,
+                self.param_second,
+            ))
+            .unwrap(),
+            ron::to_string(&(
+                self.microcode_state,
+                self.executing,
+                self.initializing,
+                self.halted,
+            ))
+            .unwrap(),
         ]
     }
     fn load_data(&mut self, chip_data: &[String]) {
         let registers: (u8, u8, u8, u8, u8) = ron::from_str(&chip_data[0]).unwrap();
         let flags: (bool, bool, bool, bool) = ron::from_str(&chip_data[1]).unwrap();
         let exec: (u16, u8, u8, u8, u8, u8) = ron::from_str(&chip_data[2]).unwrap();
-        let internal:(u8, bool, bool, bool) = ron::from_str(&chip_data[3]).unwrap();
-        
+        let internal: (u8, bool, bool, bool) = ron::from_str(&chip_data[3]).unwrap();
+
         self.accumulator = registers.0;
         self.reg_b = registers.1;
         self.reg_c = registers.2;

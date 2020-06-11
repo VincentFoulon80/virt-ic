@@ -1,18 +1,16 @@
-use super::{Pin, PinType, State, save::SavedTrace};
+use super::{save::SavedTrace, Pin, PinType, State};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 /// A Trace that connects two chip's Pin
 #[derive(Default, Debug)]
 pub struct Trace {
-    link: Vec<Rc<RefCell<Pin>>>
+    link: Vec<Rc<RefCell<Pin>>>,
 }
 
 impl Trace {
     pub fn new() -> Trace {
-        Trace {
-            link: vec![]
-        }
+        Trace { link: vec![] }
     }
 
     pub fn connect(&mut self, pin: Rc<RefCell<Pin>>) {
@@ -25,7 +23,11 @@ impl Trace {
             if pin.borrow().pin_type == PinType::Output {
                 match pin.borrow().state {
                     State::High => main_state = State::High,
-                    State::Low => if main_state == State::Undefined { main_state = State::Low },
+                    State::Low => {
+                        if main_state == State::Undefined {
+                            main_state = State::Low
+                        }
+                    }
                     State::Undefined => {}
                 }
             }

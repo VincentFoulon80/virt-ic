@@ -41,7 +41,9 @@ impl Pin {
 
 /// Chip : a trait that represents chips on board
 pub trait Chip: std::fmt::Debug {
+    /// Give a unique id to maintain continuity when saving. This uuid must not maintain any information other that identity. When saving, this value will be used to link the traced pins to their respective chip.
     fn get_uuid(&self) -> u128;
+    /// Give a unique name for the chip struct, it must be the same for every chips of the same struct. This value will be used to rebuild the correct Struct based on this name with the help of the chip factory
     fn get_type(&self) -> &str;
     /// Runs the chip for a certain amount of time
     fn run(&mut self, elapsed_time: std::time::Duration);
@@ -63,7 +65,7 @@ pub trait Chip: std::fmt::Debug {
             pin.borrow_mut().state = state.clone();
         }
     }
-
+    /// Save the chip to a SavedChip struct
     fn save(&self) -> SavedChip {
         SavedChip {
             uuid: self.get_uuid(),
@@ -72,17 +74,33 @@ pub trait Chip: std::fmt::Debug {
         }
     }
 
+    /// Create a Vec of String that must contain every information you need to restore your chip to a certain state. This will be saved in the resulting file.
     fn save_data(&self) -> Vec<String> {
         vec![]
     }
 
+    /// Restore the chip from a SavedChip struct
     fn load(&mut self, saved_chip: &SavedChip) {
         self.load_data(&saved_chip.chip_data);
     }
 
+    /// Using the array of String you provided in `save_data` , you must restore the state of your chip.
     fn load_data(&mut self, _chip_data: &[String]) {}
 }
 
+/// Factory function for chips that are built-in for the virt_ic crate.
+/// 
+/// You can provide your own factory function to the `Board::Load` to build your custom chips.
+/// ```
+/// pub fn my_custom_factory(chip_name: &str) -> Option<Box<dyn Chip>> {
+///     if let Some(chip) = virt_ic::chip::virt_ic_chip_factory(chip_name) {
+///         return chip;
+///     } else {
+///         // build your chips here
+///         // with a match chip_name for example
+///     }
+/// }
+/// ```
 pub fn virt_ic_chip_factory(chip_name: &str) -> Option<Box<dyn Chip>> {
     match chip_name {
         "virt_ic::Button" => Some(Box::new(buttons::Button::new())),

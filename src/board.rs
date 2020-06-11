@@ -138,7 +138,14 @@ impl Board {
         chip_factory: &dyn Fn(&str) -> Option<Box<dyn Chip>>,
     ) -> std::io::Result<Board> {
         let file = std::fs::File::open(std::path::Path::new(filepath))?;
-        let s_board: SavedBoard = ron::de::from_reader(file).unwrap();
-        Ok(s_board.build_board(chip_factory))
+        let s_board: Result<SavedBoard, ron::Error> = ron::de::from_reader(file);
+        if let Ok(s_board) = s_board {
+            Ok(s_board.build_board(chip_factory))
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("{:?}", s_board.err()),
+            ))
+        }
     }
 }

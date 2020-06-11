@@ -77,20 +77,11 @@ impl SavedBoard {
             for s_pin in s_trace.pins.iter() {
                 for l_chip in loaded_chips.iter() {
                     if s_pin.parent == l_chip.0 {
-                        l_chip
-                            .1
-                            .borrow_mut()
-                            .set_pin_state(s_pin.number, &s_pin.state);
-                        l_chip
-                            .1
-                            .borrow_mut()
-                            .get_pin(s_pin.number)
-                            .unwrap()
-                            .borrow_mut()
-                            .pin_type = s_pin.pin_type.clone();
-                        trace
-                            .borrow_mut()
-                            .connect(l_chip.1.borrow_mut().get_pin(s_pin.number).unwrap().clone())
+                        if let Ok(pin) = l_chip.1.borrow_mut().get_pin(s_pin.number) {
+                            pin.borrow_mut().state = s_pin.state.clone();
+                            pin.borrow_mut().pin_type = s_pin.pin_type.clone();
+                            trace.borrow_mut().connect(pin.clone())
+                        }
                     }
                 }
             }

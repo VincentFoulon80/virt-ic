@@ -11,7 +11,13 @@ You can then run the circuit to emulate the chips and links between them.
 
 This library is a Backend emulator, it means that there is no GUI (yet) to create boards.
 
-## Chips
+# Features
+
+- Build Boards with chips and traces between them
+- Simulate the board for a certain duration with a certain step, it's also possible to run it in realtime !
+- Save and load the board to backup your design or continue your simulation later
+
+## Available Built-in Chips
 
 - Generator
 - Buttons

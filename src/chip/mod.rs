@@ -89,7 +89,7 @@ pub trait Chip: std::fmt::Debug {
 }
 
 /// Factory function for chips that are built-in for the virt_ic crate.
-/// 
+///
 /// You can provide your own factory function to the `Board::Load` to build your custom chips.
 /// ```
 /// pub fn my_custom_factory(chip_name: &str) -> Option<Box<dyn Chip>> {

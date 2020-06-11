@@ -1,7 +1,7 @@
 [package]
 name = "virt-ic"
 description = "virtual integrated circuits - an backend IC emulator"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Vincent Foulon <sup.vfoulon@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/VincentFoulon80/virt-ic"

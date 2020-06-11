@@ -1,5 +1,5 @@
 //! Readable and/or Writable Memory Chips
-use super::super::State;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -29,6 +29,7 @@ use rand::random;
 ///        --------
 /// ```
 pub struct Ram256B {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 22],
     ram: [u8; 256],
     powered: bool
@@ -84,30 +85,32 @@ impl Ram256B {
     pub const GND: u8 = 11;
     
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         Ram256B {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(15, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(16, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(17, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(18, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(19, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(20, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(21, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(22, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 15, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 16, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 17, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 18, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 19, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 20, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 21, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input)))
             ],
             ram: [0; 256],
             powered: false
@@ -135,6 +138,12 @@ impl Ram256B {
     }
 }
 impl Chip for Ram256B {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::Ram256B"
+    }
     fn get_pin_qty(&self) -> u8 { 
         22
     }
@@ -204,6 +213,18 @@ impl Chip for Ram256B {
             self.powered = false;
         }
     }
+
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            ron::to_string(&self.ram.to_vec()).unwrap(),
+            String::from(if self.powered {"ON"} else {"OFF"})
+        ]
+    }
+    fn load_data(&mut self, chip_data: &[String]) {
+        let data: Vec<u8> = ron::from_str(&chip_data[0]).unwrap();
+        self.ram.copy_from_slice(&data[..data.len()]);
+        self.powered = chip_data[1] == "ON";
+    }
 }
 
 /// # A 256-bytes ROM chip
@@ -229,6 +250,7 @@ impl Chip for Ram256B {
 ///         --------
 /// ```
 pub struct Rom256B {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 22],
     rom: [u8; 256],
 }
@@ -281,30 +303,32 @@ impl Rom256B {
     pub const GND: u8 = 11;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         Rom256B {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(15, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(16, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(17, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(18, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(19, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(20, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(21, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(22, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 15, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 16, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 17, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 18, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 19, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 20, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 21, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input)))
             ],
             rom: [0; 256],
         }
@@ -332,6 +356,13 @@ impl Rom256B {
     }
 }
 impl Chip for Rom256B {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::Rom256B"
+    }
+
     fn get_pin_qty(&self) -> u8 { 
         22
     }
@@ -380,5 +411,15 @@ impl Chip for Rom256B {
                 self.pin[i].borrow_mut().state = State::Undefined
             }
         }
+    }
+
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            ron::to_string(&self.rom.to_vec()).unwrap()
+        ]
+    }
+    fn load_data(&mut self, chip_data: &[String]) {
+        let data: Vec<u8> = ron::from_str(&chip_data[0]).unwrap();
+        self.rom.copy_from_slice(&data[..data.len()]);
     }
 }

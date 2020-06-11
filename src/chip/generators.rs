@@ -1,5 +1,5 @@
 //! Generators that provide fixed currents
-use super::super::State;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -14,6 +14,7 @@ use std::rc::Rc;
 /// ```
 #[derive(Debug)]
 pub struct Generator {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 2],
 }
 impl Default for Generator {
@@ -27,10 +28,12 @@ impl Generator {
     pub const GND: u8 = 2;
     
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         let gen = Generator {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
             ]
         };
         gen.pin[0].borrow_mut().state = State::High;
@@ -39,6 +42,12 @@ impl Generator {
     }
 }
 impl Chip for Generator {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    } 
+    fn get_type(&self) -> &str {
+        "virt_ic::Generator"
+    }
     fn get_pin_qty(&self) -> u8 { 
         2
     }

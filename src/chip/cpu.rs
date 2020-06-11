@@ -1,5 +1,5 @@
 //! Central Processing Units
-use super::super::State;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -143,6 +143,7 @@ use std::rc::Rc;
 ///        --------
 /// ```
 pub struct SimpleCPU {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 26],
     program_counter: u16,
     accumulator: u8,
@@ -205,34 +206,36 @@ impl SimpleCPU {
     pub const GND: u8 = 13;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         SimpleCPU {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(15, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(16, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(17, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(18, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(19, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(20, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(21, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(22, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(23, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(24, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(25, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(26, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 15, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 16, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 17, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 18, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 19, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 20, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 21, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 22, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 23, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 24, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 25, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 26, PinType::Input)))
             ],
             program_counter: 0,
             accumulator: 0,
@@ -844,6 +847,12 @@ impl SimpleCPU {
     }
 }
 impl Chip for SimpleCPU {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::SimpleCPU"
+    }
     fn get_pin_qty(&self) -> u8 { 
         26
     }
@@ -932,5 +941,40 @@ impl Chip for SimpleCPU {
             }
             self.initializing = true;
         }
+    }
+
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            ron::to_string(&(self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l)).unwrap(),
+            ron::to_string(&(self.flag_zero, self.flag_neg, self.flag_carry, self.flag_overflow)).unwrap(),
+            ron::to_string(&(self.program_counter, self.stack_bank, self.stack_pointer, self.current_opcode, self.param_first, self.param_second)).unwrap(),
+            ron::to_string(&(self.microcode_state, self.executing, self.initializing, self.halted)).unwrap()
+        ]
+    }
+    fn load_data(&mut self, chip_data: &[String]) {
+        let registers: (u8, u8, u8, u8, u8) = ron::from_str(&chip_data[0]).unwrap();
+        let flags: (bool, bool, bool, bool) = ron::from_str(&chip_data[1]).unwrap();
+        let exec: (u16, u8, u8, u8, u8, u8) = ron::from_str(&chip_data[2]).unwrap();
+        let internal:(u8, bool, bool, bool) = ron::from_str(&chip_data[3]).unwrap();
+        
+        self.accumulator = registers.0;
+        self.reg_b = registers.1;
+        self.reg_c = registers.2;
+        self.reg_h = registers.3;
+        self.reg_l = registers.4;
+        self.flag_zero = flags.0;
+        self.flag_neg = flags.1;
+        self.flag_carry = flags.2;
+        self.flag_overflow = flags.3;
+        self.program_counter = exec.0;
+        self.stack_bank = exec.1;
+        self.stack_pointer = exec.2;
+        self.current_opcode = exec.3;
+        self.param_first = exec.4;
+        self.param_second = exec.5;
+        self.microcode_state = internal.0;
+        self.executing = internal.1;
+        self.initializing = internal.2;
+        self.halted = internal.3;
     }
 }

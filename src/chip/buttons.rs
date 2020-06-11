@@ -1,5 +1,5 @@
 //! Buttons and other physically interactable chips
-use super::super::State;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -16,6 +16,7 @@ use std::rc::Rc;
 /// ```
 #[derive(Debug)]
 pub struct Button {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 2],
     down: bool
 }
@@ -30,10 +31,12 @@ impl Button {
     pub const OUT: u8 = 2;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         Button {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
             ],
             down: false
         }
@@ -48,6 +51,12 @@ impl Button {
     }
 }
 impl Chip for Button {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::Button"
+    }
     fn get_pin_qty(&self) -> u8 { 
         2
     }
@@ -61,9 +70,18 @@ impl Chip for Button {
     }
     fn run(&mut self, _: std::time::Duration) {
         if self.down {
-            self.pin[1].borrow_mut().state = self.pin[0].borrow().state;
+            self.pin[1].borrow_mut().state = self.pin[0].borrow().state.clone();
         } else {
             self.pin[1].borrow_mut().state = State::Undefined;
         }
+    }
+
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            String::from(if self.down {"DOWN"} else {"UP"}),
+        ]
+    }
+    fn load_data(&mut self, chip_data: &[String]) {
+        self.down = chip_data[0] == "DOWN";
     }
 }

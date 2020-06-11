@@ -55,6 +55,21 @@ impl Socket {
 }
 
 impl Chip for Socket {
+    fn get_uuid(&self) -> u128 {
+        if let Some(chip) = self.chip.as_ref() {
+            chip.get_uuid()
+        } else {
+            0
+        }
+    }
+    fn get_type(&self) -> &str {
+        if let Some(chip) = self.chip.as_ref() {
+            chip.get_type()
+        } else {
+            "NULL"
+        }
+    }
+
     fn get_pin_qty(&self) -> u8 {
         if let Some(chip) = self.chip.as_ref() {
             chip.get_pin_qty()
@@ -94,6 +109,18 @@ impl Chip for Socket {
     fn run(&mut self, elapsed_time: std::time::Duration) {
         if let Some(chip) = self.chip.as_mut() {
             chip.run(elapsed_time)
+        }
+    }
+    fn save_data(&self) -> Vec<String> {
+        if let Some(chip) = self.chip.as_ref() {
+            chip.save_data()
+        } else {
+            vec![]
+        }
+    }
+    fn load_data(&mut self, s_chip: &[String]) {
+        if let Some(chip) = self.chip.as_mut() {
+            chip.load_data(s_chip)
         }
     }
 }

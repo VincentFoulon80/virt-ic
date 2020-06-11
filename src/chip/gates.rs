@@ -1,5 +1,5 @@
 //! Logic Gates like OR, AND, NOT ...
-use super::super::State;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -20,6 +20,7 @@ use std::rc::Rc;
 /// ```
 #[derive(Debug)]
 pub struct GateOr {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 14],
 }
 impl Default for GateOr {
@@ -45,27 +46,35 @@ impl GateOr {
     pub const GND: u8 = 7;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         GateOr {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input)))
             ]
         }
     }
 }
 impl Chip for GateOr {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::GateOr"
+    }
     fn get_pin_qty(&self) -> u8 { 
         14
     }
@@ -114,6 +123,7 @@ impl Chip for GateOr {
 /// ```
 #[derive(Debug)]
 pub struct GateAnd {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 14],
 }
 impl Default for GateAnd {
@@ -139,27 +149,35 @@ impl GateAnd {
     pub const GND: u8 = 7;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         GateAnd {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input)))
             ]
         }
     }
 }
 impl Chip for GateAnd {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::GateAnd"
+    }
     fn get_pin_qty(&self) -> u8 { 
         14
     }
@@ -207,6 +225,7 @@ impl Chip for GateAnd {
 /// ```
 #[derive(Debug)]
 pub struct GateNot {
+    uuid: u128,
     pin: [Rc<RefCell<Pin>>; 14],
 }
 impl Default for GateNot {
@@ -232,27 +251,35 @@ impl GateNot {
     pub const GND: u8 = 7;
 
     pub fn new() -> Self {
+        let uuid = uuid::Uuid::new_v4().as_u128();
         GateNot {
+            uuid,
             pin: [
-                Rc::new(RefCell::new(Pin::new(1, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(2, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(3, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(4, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(5, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(6, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(7, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(8, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(9, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(10, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(11, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(12, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(13, PinType::Input))),
-                Rc::new(RefCell::new(Pin::new(14, PinType::Input)))
+                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 3, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 4, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 5, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 6, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 7, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 8, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 9, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 10, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 11, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 12, PinType::Output))),
+                Rc::new(RefCell::new(Pin::new(uuid, 13, PinType::Input))),
+                Rc::new(RefCell::new(Pin::new(uuid, 14, PinType::Input)))
             ]
         }
     }
 }
 impl Chip for GateNot {
+    fn get_uuid(&self) -> u128 {
+        self.uuid
+    }
+    fn get_type(&self) -> &str {
+        "virt_ic::GateNot"
+    }
     fn get_pin_qty(&self) -> u8 { 
         14
     }

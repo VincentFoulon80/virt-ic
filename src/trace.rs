@@ -1,4 +1,4 @@
-use super::{Pin, PinType, State};
+use super::{Pin, PinType, State, save::SavedTrace};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -35,5 +35,13 @@ impl Trace {
                 pin.borrow_mut().state = main_state.clone();
             }
         }
+    }
+
+    pub fn save(&self) -> SavedTrace {
+        let mut save = SavedTrace::new();
+        for pin in self.link.iter() {
+            save.add_trace(pin.borrow().clone());
+        }
+        save
     }
 }

@@ -1,9 +1,9 @@
-use super::{Trace, Socket, Chip};
+use super::{Trace, Socket, Chip, save::{SavedBoard, SavedSocket}};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 /// A Board that contains Traces and Sockets
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Board {
     traces: Vec<Rc<RefCell<Trace>>>,
     sockets: Vec<Rc<RefCell<Socket>>>
@@ -44,6 +44,23 @@ impl Board {
         self.sockets.last_mut().unwrap().clone()
     }
 
+    pub fn get_sockets(&self) -> Vec<Rc<RefCell<Socket>>> {
+        self.sockets.clone()
+    }
+
+    pub fn get_traces(&self) -> Vec<Rc<RefCell<Trace>>> {
+        self.traces.clone()
+    }
+
+    pub fn get_socket(&mut self, uuid: u128) -> Option<Rc<RefCell<Socket>>> {
+        for socket in self.sockets.iter() {
+            if socket.borrow().get_uuid() == uuid {
+                return Some(socket.clone());
+            }
+        }
+        None
+    }
+
     /// Run the circuit for a certain amount of time
     /// You must use `use_during` since it provides more accurate simulation by stepping
     pub fn run(&mut self, time_elapsed : std::time::Duration) {
@@ -66,4 +83,42 @@ impl Board {
             elapsed += step;
         }
     }
+
+    /// Save the board to a file in RON format
+    pub fn save(&self, filepath: &str) -> std::io::Result<()> {
+        let mut s_board = SavedBoard::new();
+        for socket in self.sockets.iter() {
+            let saved_chip = socket.borrow().save();
+            let mut saved_socket = SavedSocket::new();
+            if saved_chip.chip_type != "NULL" {
+                saved_socket.set_chip(saved_chip);
+            }
+            s_board.add_socket(saved_socket);
+        }
+        for trace in self.traces.iter() {
+            s_board.add_trace(trace.borrow().save());
+        }
+
+        let file = std::fs::File::create(std::path::Path::new(filepath))?;
+        if let Err(e) = ron::ser::to_writer(file, &s_board) {
+            Err(std::io::Error::new(std::io::ErrorKind::Interrupted, format!("{:?}", e)))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Load a file and create a board according to this file
+    /// You'll need to provide a "chip factory" function as second parameter
+    /// By default it's `virt_ic::chip::virt_ic_chip_factory`
+    /// ```
+    /// use virt_ic::chip::virt_ic_chip_factory;
+    /// 
+    /// let mut board = Board::load("my_saved_board.ron", &virt_ic_chip_factory).unwrap();
+    /// ```
+    pub fn load(filepath: &str, chip_factory: &dyn Fn(&str) -> Option<Box<dyn Chip>>) -> std::io::Result<Board> {
+        let file = std::fs::File::open(std::path::Path::new(filepath))?;
+        let s_board: SavedBoard = ron::de::from_reader(file).unwrap();
+        Ok(s_board.build_board(chip_factory))
+    }
 }
+

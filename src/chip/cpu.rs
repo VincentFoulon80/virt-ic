@@ -1,5 +1,6 @@
 //! Central Processing Units
-use super::super::State;
+use crate::save::SavedChip;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -850,7 +851,9 @@ impl Chip for SimpleCPU {
     fn get_uuid(&self) -> u128 {
         self.uuid
     }
-
+    fn get_type(&self) -> &str {
+        "virt_ic::SimpleCPU"
+    }
     fn get_pin_qty(&self) -> u8 { 
         26
     }
@@ -939,5 +942,44 @@ impl Chip for SimpleCPU {
             }
             self.initializing = true;
         }
+    }
+
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![
+                ron::to_string(&(self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l)).unwrap(),
+                ron::to_string(&(self.flag_zero, self.flag_neg, self.flag_carry, self.flag_overflow)).unwrap(),
+                ron::to_string(&(self.program_counter, self.stack_bank, self.stack_pointer, self.current_opcode, self.param_first, self.param_second)).unwrap(),
+                ron::to_string(&(self.microcode_state, self.executing, self.initializing, self.halted)).unwrap()
+            ]
+        }
+    }
+    fn load(&mut self, s_chip: &SavedChip) {
+        let registers: (u8, u8, u8, u8, u8) = ron::from_str(&s_chip.chip_data[0]).unwrap();
+        let flags: (bool, bool, bool, bool) = ron::from_str(&s_chip.chip_data[1]).unwrap();
+        let exec: (u16, u8, u8, u8, u8, u8) = ron::from_str(&s_chip.chip_data[2]).unwrap();
+        let internal:(u8, bool, bool, bool) = ron::from_str(&s_chip.chip_data[3]).unwrap();
+        
+        self.accumulator = registers.0;
+        self.reg_b = registers.1;
+        self.reg_c = registers.2;
+        self.reg_h = registers.3;
+        self.reg_l = registers.4;
+        self.flag_zero = flags.0;
+        self.flag_neg = flags.1;
+        self.flag_carry = flags.2;
+        self.flag_overflow = flags.3;
+        self.program_counter = exec.0;
+        self.stack_bank = exec.1;
+        self.stack_pointer = exec.2;
+        self.current_opcode = exec.3;
+        self.param_first = exec.4;
+        self.param_second = exec.5;
+        self.microcode_state = internal.0;
+        self.executing = internal.1;
+        self.initializing = internal.2;
+        self.halted = internal.3;
     }
 }

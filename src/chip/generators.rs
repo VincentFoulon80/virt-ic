@@ -1,5 +1,6 @@
 //! Generators that provide fixed currents
-use super::super::State;
+use crate::save::SavedChip;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -45,7 +46,9 @@ impl Chip for Generator {
     fn get_uuid(&self) -> u128 {
         self.uuid
     } 
-
+    fn get_type(&self) -> &str {
+        "virt_ic::Generator"
+    }
     fn get_pin_qty(&self) -> u8 { 
         2
     }
@@ -61,4 +64,14 @@ impl Chip for Generator {
         self.pin[0].borrow_mut().state = State::High;
         self.pin[1].borrow_mut().state = State::Low;
     }
+
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![]
+        }
+    }
+
+    fn load(&mut self, _s_chip: &SavedChip) {}
 }

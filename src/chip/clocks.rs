@@ -1,5 +1,6 @@
 //! Clocks that pulse at different speeds
-use super::super::State;
+use crate::save::SavedChip;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -50,7 +51,9 @@ impl Chip for Clock100Hz {
     fn get_uuid(&self) -> u128 {
         self.uuid
     }
-
+    fn get_type(&self) -> &str {
+        "virt_ic::Clock100Hz"
+    }
     fn get_pin_qty(&self) -> u8 { 
         4
     }
@@ -81,6 +84,22 @@ impl Chip for Clock100Hz {
         } else {
             self.timer = Duration::new(0,0);
         }
+    }
+
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![
+                String::from(if self.active {"ON"} else {"OFF"}),
+                ron::to_string(&self.timer).unwrap()
+            ]
+        }
+    }
+    fn load(&mut self, s_chip: &SavedChip) {
+        let timer: Duration = ron::from_str(&s_chip.chip_data[1]).unwrap();
+        self.active = s_chip.chip_data[0] == "ON";
+        self.timer = timer;
     }
 }
 
@@ -129,7 +148,9 @@ impl Chip for Clock1kHz {
     fn get_uuid(&self) -> u128 {
         self.uuid
     }
-    
+    fn get_type(&self) -> &str {
+        "virt_ic::Clock1kHz"
+    }
     fn get_pin_qty(&self) -> u8 { 
         4
     }
@@ -160,5 +181,21 @@ impl Chip for Clock1kHz {
         } else {
             self.timer = Duration::new(0,0);
         }
+    }
+    
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![
+                String::from(if self.active {"ON"} else {"OFF"}),
+                ron::to_string(&self.timer).unwrap()
+            ]
+        }
+    }
+    fn load(&mut self, s_chip: &SavedChip) {
+        let timer: Duration = ron::from_str(&s_chip.chip_data[1]).unwrap();
+        self.active = s_chip.chip_data[0] == "ON";
+        self.timer = timer;
     }
 }

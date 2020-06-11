@@ -1,5 +1,6 @@
 //! Buttons and other physically interactable chips
-use super::super::State;
+use crate::save::SavedChip;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -54,7 +55,9 @@ impl Chip for Button {
     fn get_uuid(&self) -> u128 {
         self.uuid
     }
-    
+    fn get_type(&self) -> &str {
+        "virt_ic::Button"
+    }
     fn get_pin_qty(&self) -> u8 { 
         2
     }
@@ -68,9 +71,22 @@ impl Chip for Button {
     }
     fn run(&mut self, _: std::time::Duration) {
         if self.down {
-            self.pin[1].borrow_mut().state = self.pin[0].borrow().state;
+            self.pin[1].borrow_mut().state = self.pin[0].borrow().state.clone();
         } else {
             self.pin[1].borrow_mut().state = State::Undefined;
         }
+    }
+
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![
+                String::from(if self.down {"DOWN"} else {"UP"}),
+            ]
+        }
+    }
+    fn load(&mut self, s_chip: &SavedChip) {
+        self.down = s_chip.chip_data[0] == "DOWN";
     }
 }

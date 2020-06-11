@@ -2,13 +2,15 @@ pub mod chip;
 mod trace;
 mod board;
 mod socket;
+mod save;
 pub use chip::{Chip, Pin, PinType};
 pub use board::Board;
 pub use trace::Trace;
 pub use socket::Socket;
+use serde::{Serialize, Deserialize};
 
 /// Current's State
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum State {
     Undefined,
     High,

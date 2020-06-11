@@ -1,5 +1,6 @@
 //! Readable and/or Writable Memory Chips
-use super::super::State;
+use crate::save::SavedChip;
+use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -141,7 +142,9 @@ impl Chip for Ram256B {
     fn get_uuid(&self) -> u128 {
         self.uuid
     }
-
+    fn get_type(&self) -> &str {
+        "virt_ic::Ram256B"
+    }
     fn get_pin_qty(&self) -> u8 { 
         22
     }
@@ -210,6 +213,22 @@ impl Chip for Ram256B {
             }
             self.powered = false;
         }
+    }
+
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![
+                ron::to_string(&self.ram.to_vec()).unwrap(),
+                String::from(if self.powered {"ON"} else {"OFF"})
+            ]
+        }
+    }
+    fn load(&mut self, s_chip: &SavedChip) {
+        let data: Vec<u8> = ron::from_str(&s_chip.chip_data[0]).unwrap();
+        self.ram.copy_from_slice(&data[..data.len()]);
+        self.powered = s_chip.chip_data[1] == "ON";
     }
 }
 
@@ -345,6 +364,9 @@ impl Chip for Rom256B {
     fn get_uuid(&self) -> u128 {
         self.uuid
     }
+    fn get_type(&self) -> &str {
+        "virt_ic::Rom256B"
+    }
 
     fn get_pin_qty(&self) -> u8 { 
         22
@@ -394,5 +416,19 @@ impl Chip for Rom256B {
                 self.pin[i].borrow_mut().state = State::Undefined
             }
         }
+    }
+
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.uuid,
+            chip_type: String::from(self.get_type()),
+            chip_data: vec![
+                ron::to_string(&self.rom.to_vec()).unwrap()
+            ]
+        }
+    }
+    fn load(&mut self, s_chip: &SavedChip) {
+        let data: Vec<u8> = ron::from_str(&s_chip.chip_data[0]).unwrap();
+        self.rom.copy_from_slice(&data[..data.len()]);
     }
 }

@@ -1,4 +1,4 @@
-use super::{Chip, Pin, PinType, State, save::SavedChip};
+use super::{Chip, Pin, PinType, State};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -111,20 +111,16 @@ impl Chip for Socket {
             chip.run(elapsed_time)
         }
     }
-    fn save(&self) -> SavedChip {
+    fn save_data(&self) -> Vec<String> {
         if let Some(chip) = self.chip.as_ref() {
-            chip.save()
+            chip.save_data()
         } else {
-            SavedChip {
-                uuid: uuid::Uuid::new_v4().as_u128(),
-                chip_type: String::from("NULL"),
-                chip_data: vec![]
-            }
+            vec![]
         }
     }
-    fn load(&mut self, s_chip: &SavedChip) {
+    fn load_data(&mut self, s_chip: &[String]) {
         if let Some(chip) = self.chip.as_mut() {
-            chip.load(s_chip);
+            chip.load_data(s_chip)
         }
     }
 }

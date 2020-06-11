@@ -1,5 +1,4 @@
 //! Buttons and other physically interactable chips
-use crate::save::SavedChip;
 use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -77,16 +76,12 @@ impl Chip for Button {
         }
     }
 
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![
-                String::from(if self.down {"DOWN"} else {"UP"}),
-            ]
-        }
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            String::from(if self.down {"DOWN"} else {"UP"}),
+        ]
     }
-    fn load(&mut self, s_chip: &SavedChip) {
-        self.down = s_chip.chip_data[0] == "DOWN";
+    fn load_data(&mut self, chip_data: &[String]) {
+        self.down = chip_data[0] == "DOWN";
     }
 }

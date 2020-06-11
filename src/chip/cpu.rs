@@ -1,5 +1,4 @@
 //! Central Processing Units
-use crate::save::SavedChip;
 use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -944,23 +943,19 @@ impl Chip for SimpleCPU {
         }
     }
 
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![
-                ron::to_string(&(self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l)).unwrap(),
-                ron::to_string(&(self.flag_zero, self.flag_neg, self.flag_carry, self.flag_overflow)).unwrap(),
-                ron::to_string(&(self.program_counter, self.stack_bank, self.stack_pointer, self.current_opcode, self.param_first, self.param_second)).unwrap(),
-                ron::to_string(&(self.microcode_state, self.executing, self.initializing, self.halted)).unwrap()
-            ]
-        }
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            ron::to_string(&(self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l)).unwrap(),
+            ron::to_string(&(self.flag_zero, self.flag_neg, self.flag_carry, self.flag_overflow)).unwrap(),
+            ron::to_string(&(self.program_counter, self.stack_bank, self.stack_pointer, self.current_opcode, self.param_first, self.param_second)).unwrap(),
+            ron::to_string(&(self.microcode_state, self.executing, self.initializing, self.halted)).unwrap()
+        ]
     }
-    fn load(&mut self, s_chip: &SavedChip) {
-        let registers: (u8, u8, u8, u8, u8) = ron::from_str(&s_chip.chip_data[0]).unwrap();
-        let flags: (bool, bool, bool, bool) = ron::from_str(&s_chip.chip_data[1]).unwrap();
-        let exec: (u16, u8, u8, u8, u8, u8) = ron::from_str(&s_chip.chip_data[2]).unwrap();
-        let internal:(u8, bool, bool, bool) = ron::from_str(&s_chip.chip_data[3]).unwrap();
+    fn load_data(&mut self, chip_data: &[String]) {
+        let registers: (u8, u8, u8, u8, u8) = ron::from_str(&chip_data[0]).unwrap();
+        let flags: (bool, bool, bool, bool) = ron::from_str(&chip_data[1]).unwrap();
+        let exec: (u16, u8, u8, u8, u8, u8) = ron::from_str(&chip_data[2]).unwrap();
+        let internal:(u8, bool, bool, bool) = ron::from_str(&chip_data[3]).unwrap();
         
         self.accumulator = registers.0;
         self.reg_b = registers.1;

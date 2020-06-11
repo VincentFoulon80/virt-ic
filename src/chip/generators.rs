@@ -1,5 +1,4 @@
 //! Generators that provide fixed currents
-use crate::save::SavedChip;
 use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -64,14 +63,4 @@ impl Chip for Generator {
         self.pin[0].borrow_mut().state = State::High;
         self.pin[1].borrow_mut().state = State::Low;
     }
-
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![]
-        }
-    }
-
-    fn load(&mut self, _s_chip: &SavedChip) {}
 }

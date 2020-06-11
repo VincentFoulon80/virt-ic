@@ -64,9 +64,23 @@ pub trait Chip: std::fmt::Debug {
         } 
     }
 
-    fn save(&self) -> SavedChip;
+    fn save(&self) -> SavedChip {
+        SavedChip {
+            uuid: self.get_uuid(),
+            chip_type: String::from(self.get_type()),
+            chip_data: self.save_data()
+        }
+    }
 
-    fn load(&mut self, saved_chip: &SavedChip);
+    fn save_data(&self) -> Vec<String> {
+        vec![]
+    }
+
+    fn load(&mut self, saved_chip: &SavedChip) {
+        self.load_data(&saved_chip.chip_data);
+    }
+
+    fn load_data(&mut self, _chip_data: &[String]) {}
 }
 
 pub fn virt_ic_chip_factory(chip_name: &str) -> Option<Box<dyn Chip>> {

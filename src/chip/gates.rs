@@ -1,5 +1,4 @@
 //! Logic Gates like OR, AND, NOT ...
-use crate::save::SavedChip;
 use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -105,15 +104,6 @@ impl Chip for GateOr {
             }
         }
     }
-
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![]
-        }
-    }
-    fn load(&mut self, _s_chip: &SavedChip) {}
 }
 
 
@@ -217,15 +207,6 @@ impl Chip for GateAnd {
             }
         }
     }
-
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![]
-        }
-    }
-    fn load(&mut self, _s_chip: &SavedChip) {}
 }
 
 /// # A chip with 6 bundled "NOT" gates
@@ -332,13 +313,4 @@ impl Chip for GateNot {
             }
         }
     }
-
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![]
-        }
-    }
-    fn load(&mut self, _s_chip: &SavedChip) {}
 }

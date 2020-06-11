@@ -1,5 +1,4 @@
 //! Readable and/or Writable Memory Chips
-use crate::save::SavedChip;
 use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -215,20 +214,16 @@ impl Chip for Ram256B {
         }
     }
 
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![
-                ron::to_string(&self.ram.to_vec()).unwrap(),
-                String::from(if self.powered {"ON"} else {"OFF"})
-            ]
-        }
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            ron::to_string(&self.ram.to_vec()).unwrap(),
+            String::from(if self.powered {"ON"} else {"OFF"})
+        ]
     }
-    fn load(&mut self, s_chip: &SavedChip) {
-        let data: Vec<u8> = ron::from_str(&s_chip.chip_data[0]).unwrap();
+    fn load_data(&mut self, chip_data: &[String]) {
+        let data: Vec<u8> = ron::from_str(&chip_data[0]).unwrap();
         self.ram.copy_from_slice(&data[..data.len()]);
-        self.powered = s_chip.chip_data[1] == "ON";
+        self.powered = chip_data[1] == "ON";
     }
 }
 
@@ -418,17 +413,13 @@ impl Chip for Rom256B {
         }
     }
 
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![
-                ron::to_string(&self.rom.to_vec()).unwrap()
-            ]
-        }
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            ron::to_string(&self.rom.to_vec()).unwrap()
+        ]
     }
-    fn load(&mut self, s_chip: &SavedChip) {
-        let data: Vec<u8> = ron::from_str(&s_chip.chip_data[0]).unwrap();
+    fn load_data(&mut self, chip_data: &[String]) {
+        let data: Vec<u8> = ron::from_str(&chip_data[0]).unwrap();
         self.rom.copy_from_slice(&data[..data.len()]);
     }
 }

@@ -1,5 +1,4 @@
 //! Clocks that pulse at different speeds
-use crate::save::SavedChip;
 use crate::State;
 use super::{Pin, PinType, Chip};
 use std::cell::RefCell;
@@ -86,19 +85,15 @@ impl Chip for Clock100Hz {
         }
     }
 
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![
-                String::from(if self.active {"ON"} else {"OFF"}),
-                ron::to_string(&self.timer).unwrap()
-            ]
-        }
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            String::from(if self.active {"ON"} else {"OFF"}),
+            ron::to_string(&self.timer).unwrap()
+        ]
     }
-    fn load(&mut self, s_chip: &SavedChip) {
-        let timer: Duration = ron::from_str(&s_chip.chip_data[1]).unwrap();
-        self.active = s_chip.chip_data[0] == "ON";
+    fn load_data(&mut self, chip_data: &[String]) {
+        let timer: Duration = ron::from_str(&chip_data[1]).unwrap();
+        self.active = chip_data[0] == "ON";
         self.timer = timer;
     }
 }
@@ -183,19 +178,15 @@ impl Chip for Clock1kHz {
         }
     }
     
-    fn save(&self) -> SavedChip {
-        SavedChip {
-            uuid: self.uuid,
-            chip_type: String::from(self.get_type()),
-            chip_data: vec![
-                String::from(if self.active {"ON"} else {"OFF"}),
-                ron::to_string(&self.timer).unwrap()
-            ]
-        }
+    fn save_data(&self) -> Vec<String> {
+        vec![
+            String::from(if self.active {"ON"} else {"OFF"}),
+            ron::to_string(&self.timer).unwrap()
+        ]
     }
-    fn load(&mut self, s_chip: &SavedChip) {
-        let timer: Duration = ron::from_str(&s_chip.chip_data[1]).unwrap();
-        self.active = s_chip.chip_data[0] == "ON";
+    fn load_data(&mut self, chip_data: &[String]) {
+        let timer: Duration = ron::from_str(&chip_data[1]).unwrap();
+        self.active = chip_data[0] == "ON";
         self.timer = timer;
     }
 }

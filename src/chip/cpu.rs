@@ -173,8 +173,8 @@ impl Default for SimpleCPU {
 impl std::string::ToString for SimpleCPU {   
     fn to_string(&self) -> std::string::String {
         format!("PC: {:03X} ADR: {:03X} IO: {:02X} Op: {:02X} $1: {:02X} $2: {:02X}
-A: {:02X} B: {:02X} C: {:02X} H: {:02X} L: {:02X}
-SP: {:02X} mc: {} exec: {}", self.program_counter, self.get_address(), self.get_data(), self.current_opcode, self.param_first, self.param_second, self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l, self.stack_pointer, self.microcode_state, self.executing)
+A: {:02X} B: {:02X} C: {:02X} H: {:02X} L: {:02X} SP: {:02X}
+mc: {} exec: {} halted: {}", self.program_counter, self.get_address(), self.get_data(), self.current_opcode, self.param_first, self.param_second, self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l, self.stack_pointer, self.microcode_state, self.executing, self.halted)
     }
 }
 
@@ -936,12 +936,8 @@ impl Chip for SimpleCPU {
         26
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
-        if pin > 0 && pin <= 26 {
-            Ok(self.pin[pin as usize - 1].clone())
-        } else {
-            Err("Pin out of bounds")
-        }
+    fn _get_pin(&mut self, pin: u8) -> Rc<RefCell<Pin>> {
+        self.pin[pin as usize - 1].clone()
     }
 
     fn get_info(&self) -> ChipInfo {

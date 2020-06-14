@@ -74,6 +74,10 @@ impl Chip for Socket {
         }
     }
 
+    fn _get_pin(&mut self, _: u8) -> Rc<RefCell<Pin>> {
+        panic!("_get_pin is not intended to be called for a Socket !");
+    }
+
     fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
         if let Some(chip) = self.chip.as_mut() {
             chip.get_pin(pin)

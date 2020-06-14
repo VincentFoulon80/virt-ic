@@ -47,16 +47,28 @@ pub struct ChipInfo {
 
 /// Chip : a trait that represents chips on board
 pub trait Chip {
-    /// Give a unique id to maintain continuity when saving. This uuid must not maintain any information other that identity. When saving, this value will be used to link the traced pins to their respective chip.
+    /// Give a unique id to maintain continuity when saving.  
+    /// This uuid must not maintain any information other that identity.  
+    /// When saving, this value will be used to link the traced pins to their respective chip.
     fn get_uuid(&self) -> u128;
-    /// Give a unique name for the chip struct, it must be the same for every chips of the same struct. This value will be used to rebuild the correct Struct based on this name with the help of the chip factory
+    /// Give a unique name for the chip struct, it must be the same for every chips of the same struct.  
+    /// This value will be used to rebuild the correct Struct based on this name with the help of the chip factory
     fn get_type(&self) -> &str;
     /// Runs the chip for a certain amount of time
     fn run(&mut self, elapsed_time: std::time::Duration);
     /// Returns the number of pins the chip has
     fn get_pin_qty(&self) -> u8;
+    /// Get a pin of the chip. Pin will be in safe range (1..pin_qty)  
+    /// There is no way that you don't provide a pin since you have said in pin_qty how many pins your chip have
+    fn _get_pin(&mut self, pin: u8) -> Rc<RefCell<Pin>>;
     /// Get a pin of the chip
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str>;
+    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
+        if pin > 0 && pin <= self.get_pin_qty() {
+            Ok(self._get_pin(pin))
+        } else {
+            Err("Pin out of bounds")
+        }
+    }
     /// Get the state of the specified Pin
     fn get_pin_state(&mut self, pin: u8) -> State {
         if let Ok(pin) = self.get_pin(pin) {
@@ -71,9 +83,8 @@ pub trait Chip {
             pin.borrow_mut().state = state.clone();
         }
     }
-
+    /// Get chip generic informations and data
     fn get_info(&self) -> ChipInfo;
-
     /// Save the chip to a SavedChip struct
     fn save(&self) -> SavedChip {
         SavedChip {
@@ -82,17 +93,15 @@ pub trait Chip {
             chip_data: self.save_data(),
         }
     }
-
-    /// Create a Vec of String that must contain every information you need to restore your chip to a certain state. This will be saved in the resulting file.
+    /// Create a Vec of String that must contain every information you need to restore your chip to a certain state.  
+    /// This will be saved in the resulting file.
     fn save_data(&self) -> Vec<String> {
         vec![]
     }
-
     /// Restore the chip from a SavedChip struct
     fn load(&mut self, saved_chip: &SavedChip) {
         self.load_data(&saved_chip.chip_data);
     }
-
     /// Using the array of String you provided in `save_data` , you must restore the state of your chip.
     fn load_data(&mut self, _chip_data: &[String]) {}
 }

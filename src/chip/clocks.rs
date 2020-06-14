@@ -59,12 +59,8 @@ impl Chip for Clock100Hz {
         4
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
-        if pin > 0 && pin <= 4 {
-            Ok(self.pin[pin as usize - 1].clone())
-        } else {
-            Err("Pin out of bounds")
-        }
+    fn _get_pin(&mut self, pin: u8) -> Rc<RefCell<Pin>> {
+        self.pin[pin as usize - 1].clone()
     }
 
     fn get_info(&self) -> ChipInfo {
@@ -163,12 +159,8 @@ impl Chip for Clock1kHz {
         4
     }
 
-    fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
-        if pin > 0 && pin <= 4 {
-            Ok(self.pin[pin as usize - 1].clone())
-        } else {
-            Err("Pin out of bounds")
-        }
+    fn _get_pin(&mut self, pin: u8) -> Rc<RefCell<Pin>> {
+        self.pin[pin as usize - 1].clone()
     }
 
     fn get_info(&self) -> ChipInfo {

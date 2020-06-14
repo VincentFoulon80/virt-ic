@@ -1,5 +1,5 @@
 //! Central Processing Units
-use super::{Chip, Pin, PinType};
+use super::{Chip, ChipInfo, Pin, PinType};
 use crate::State;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -170,14 +170,17 @@ impl Default for SimpleCPU {
         Self::new()
     }
 }
-impl std::fmt::Debug for SimpleCPU {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        fmt.write_str(format!("PC: {:03X}\tADR: {:03X}\tIO: {:02X}\tOp: {:02X}\t$1: {:02X}\t$2: {:02X}\tA: {:02X}\tB: {:02X}\tC: {:02X}\tH: {:02X}\tL: {:02X}\tSP: {:02X}\tmc: {}\texec: {}", self.program_counter, self.get_address(), self.get_data(), self.current_opcode, self.param_first, self.param_second, self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l, self.stack_pointer, self.microcode_state, self.executing).as_str())?;
-        Ok(())
+impl std::string::ToString for SimpleCPU {   
+    fn to_string(&self) -> std::string::String {
+        format!("PC: {:03X} ADR: {:03X} IO: {:02X} Op: {:02X} $1: {:02X} $2: {:02X}
+A: {:02X} B: {:02X} C: {:02X} H: {:02X} L: {:02X}
+SP: {:02X} mc: {} exec: {}", self.program_counter, self.get_address(), self.get_data(), self.current_opcode, self.param_first, self.param_second, self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l, self.stack_pointer, self.microcode_state, self.executing)
     }
 }
 
 impl SimpleCPU {
+    pub const TYPE: &'static str = "virt_ic::SimpleCPU";
+
     pub const A0: u8 = 1;
     pub const A1: u8 = 2;
     pub const A2: u8 = 3;
@@ -927,7 +930,7 @@ impl Chip for SimpleCPU {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::SimpleCPU"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         26
@@ -940,6 +943,15 @@ impl Chip for SimpleCPU {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Simple CPU",
+            description: "A fictionnal CPU created for Virt-IC.",
+            data: self.to_string()
+        }
+    }
+
     fn run(&mut self, _: std::time::Duration) {
         if self.pin[14].borrow().state == State::Low {
             self.initializing = true;

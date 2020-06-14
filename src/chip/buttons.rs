@@ -1,5 +1,5 @@
 //! Buttons and other physically interactable chips
-use super::{Chip, Pin, PinType};
+use super::{Chip, ChipInfo, Pin, PinType};
 use crate::State;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -27,6 +27,8 @@ impl Default for Button {
 }
 
 impl Button {
+    pub const TYPE: &'static str = "virt_ic::Button";
+
     pub const IN: u8 = 1;
     pub const OUT: u8 = 2;
 
@@ -55,10 +57,18 @@ impl Chip for Button {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::Button"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         2
+    }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Button",
+            description: "A Button that open a circuit when pressed",
+            data: format!("Status: {}", if self.down {"DOWN"} else {"UP"})
+        }
     }
 
     fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {

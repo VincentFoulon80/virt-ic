@@ -1,4 +1,4 @@
-use super::{Chip, Pin, PinType, State};
+use super::{Chip, ChipInfo, Pin, PinType, State};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -98,6 +98,18 @@ impl Chip for Socket {
         if let Some(chip) = self.chip.as_mut() {
             if let Ok(pin) = chip.get_pin(pin) {
                 pin.borrow_mut().state = state.clone();
+            }
+        }
+    }
+
+    fn get_info(&self) -> ChipInfo {
+        if let Some(chip) = self.chip.as_ref() {
+            chip.get_info()
+        } else {
+            ChipInfo {
+                name: "Empty Socket",
+                description: "Socket without any chip plugged in it",
+                data: String::new()
             }
         }
     }

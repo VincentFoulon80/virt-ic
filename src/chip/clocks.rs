@@ -1,5 +1,5 @@
 //! Clocks that pulse at different speeds
-use super::{Chip, Pin, PinType};
+use super::{Chip, ChipInfo, Pin, PinType};
 use crate::State;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -27,6 +27,8 @@ impl Default for Clock100Hz {
 }
 
 impl Clock100Hz {
+    pub const TYPE: &'static str = "virt_ic::Clock100Hz";
+
     pub const CLK: u8 = 1;
     pub const VCC: u8 = 4;
     pub const GND: u8 = 2;
@@ -51,7 +53,7 @@ impl Chip for Clock100Hz {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::Clock100Hz"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         4
@@ -64,6 +66,15 @@ impl Chip for Clock100Hz {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Clock 100Hz",
+            description: "A clock that pulses at 100 Hertz",
+            data: String::new()
+        }
+    }
+
     fn run(&mut self, time_elapsed: std::time::Duration) {
         if self.active {
             self.active = false;
@@ -120,6 +131,8 @@ impl Default for Clock1kHz {
 }
 
 impl Clock1kHz {
+    pub const TYPE: &'static str = "virt_ic::Clock1kHz";
+
     pub const CLK: u8 = 1;
     pub const VCC: u8 = 4;
     pub const GND: u8 = 2;
@@ -144,7 +157,7 @@ impl Chip for Clock1kHz {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::Clock1kHz"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         4
@@ -157,6 +170,15 @@ impl Chip for Clock1kHz {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Clock 1kHz",
+            description: "A clock that pulses at 1 kilo-Hertz",
+            data: String::new()
+        }
+    }
+
     fn run(&mut self, time_elapsed: std::time::Duration) {
         if self.active {
             self.active = false;

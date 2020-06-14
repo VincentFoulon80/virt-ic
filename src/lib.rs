@@ -4,7 +4,7 @@ mod save;
 mod socket;
 mod trace;
 pub use board::Board;
-pub use chip::{Chip, Pin, PinType};
+pub use chip::{Chip, ChipInfo, Pin, PinType};
 use serde::{Deserialize, Serialize};
 pub use socket::Socket;
 pub use trace::Trace;

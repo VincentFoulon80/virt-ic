@@ -1,5 +1,5 @@
 //! Readable and/or Writable Memory Chips
-use super::{Chip, Pin, PinType};
+use super::{Chip, ChipInfo, Pin, PinType};
 use crate::State;
 use rand::random;
 use std::cell::RefCell;
@@ -39,37 +39,23 @@ impl Default for Ram256B {
         Self::new()
     }
 }
-impl std::fmt::Debug for Ram256B {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        fmt.write_str("----------\nRam256B\n")?;
-        fmt.write_str(self.to_string().as_str())?;
-        fmt.write_str(format!("\naddress: {:02X}", self.get_address()).as_str())?;
-        fmt.write_str(format!("\ndata: {:02X}", self.ram[self.get_address() as usize]).as_str())?;
-        fmt.write_str(
-            format!(
-                "\nCS: {}\tWE: {}\tOE: {}",
-                !self.pin[0].borrow().state.as_bool(),
-                !self.pin[1].borrow().state.as_bool(),
-                !self.pin[2].borrow().state.as_bool()
-            )
-            .as_str(),
-        )?;
-        fmt.write_str("\n----------")?;
-
-        Ok(())
-    }
-}
 impl ToString for Ram256B {
     fn to_string(&self) -> std::string::String {
-        let mut string = String::new();
-        for byte in self.ram.iter() {
-            string.push_str(format!("{:02X}", byte).as_str());
+        let mut string = String::from("ADR| 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+---+------------------------------------------------");
+        for (addr, byte) in self.ram.iter().enumerate() {
+            if addr % 16 == 0 {
+                string.push_str(&format!("\n {:02X}|", addr));
+            }
+            string.push_str(&format!(" {:02X}", byte));
         }
         string
     }
 }
 
 impl Ram256B {
+    pub const TYPE: &'static str = "virt_ic::Ram256B";
+
     pub const CS: u8 = 1;
     pub const WE: u8 = 2;
     pub const OE: u8 = 3;
@@ -162,7 +148,7 @@ impl Chip for Ram256B {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::Ram256B"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         22
@@ -173,6 +159,15 @@ impl Chip for Ram256B {
             Ok(self.pin[pin as usize - 1].clone())
         } else {
             Err("Pin out of bounds")
+        }
+    }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Ram 256 Bytes",
+            description: "A Random Access Memory Chip that can contains 256 Bytes of data.
+The data is not kept if the chip is no longer powered.",
+            data: self.to_string()
         }
     }
 
@@ -279,35 +274,23 @@ impl Default for Rom256B {
         Self::new()
     }
 }
-impl std::fmt::Debug for Rom256B {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        fmt.write_str("----------\nRom256B\n")?;
-        fmt.write_str(self.to_string().as_str())?;
-        fmt.write_str(format!("\naddress: {:02X}", self.get_address()).as_str())?;
-        fmt.write_str(format!("\ndata: {:02X}", self.rom[self.get_address() as usize]).as_str())?;
-        fmt.write_str(
-            format!(
-                "\nCS: {}\tOE: {}",
-                !self.pin[0].borrow().state.as_bool(),
-                !self.pin[2].borrow().state.as_bool()
-            )
-            .as_str(),
-        )?;
-        fmt.write_str("\n----------")?;
-        Ok(())
-    }
-}
 impl ToString for Rom256B {
     fn to_string(&self) -> std::string::String {
-        let mut string = String::new();
-        for byte in self.rom.iter() {
-            string.push_str(format!("{:02X}", byte).as_str());
+        let mut string = String::from("ADR| 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+---+------------------------------------------------");
+        for (addr, byte) in self.rom.iter().enumerate() {
+            if addr % 16 == 0 {
+                string.push_str(&format!("\n {:02X}|", addr));
+            }
+            string.push_str(&format!(" {:02X}", byte));
         }
         string
     }
 }
 
 impl Rom256B {
+    pub const TYPE: &'static str = "virt_ic::Rom256B";
+
     pub const CS: u8 = 1;
     pub const OE: u8 = 3;
     pub const A0: u8 = 4;
@@ -395,7 +378,7 @@ impl Chip for Rom256B {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::Rom256B"
+        Self::TYPE
     }
 
     fn get_pin_qty(&self) -> u8 {
@@ -409,6 +392,16 @@ impl Chip for Rom256B {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Rom 256 Bytes",
+            description: "A Real Only Memory Chip that can contains 256 Bytes of data.
+The data is kept if the chip is no longer powered.",
+            data: self.to_string()
+        }
+    }
+
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
         if self.pin[10].borrow().state == State::Low && self.pin[21].borrow().state == State::High {

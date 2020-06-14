@@ -39,8 +39,14 @@ impl Pin {
     }
 }
 
+pub struct ChipInfo {
+    pub name: &'static str,
+    pub description: &'static str,
+    pub data: String
+}
+
 /// Chip : a trait that represents chips on board
-pub trait Chip: std::fmt::Debug {
+pub trait Chip {
     /// Give a unique id to maintain continuity when saving. This uuid must not maintain any information other that identity. When saving, this value will be used to link the traced pins to their respective chip.
     fn get_uuid(&self) -> u128;
     /// Give a unique name for the chip struct, it must be the same for every chips of the same struct. This value will be used to rebuild the correct Struct based on this name with the help of the chip factory
@@ -65,6 +71,9 @@ pub trait Chip: std::fmt::Debug {
             pin.borrow_mut().state = state.clone();
         }
     }
+
+    fn get_info(&self) -> ChipInfo;
+
     /// Save the chip to a SavedChip struct
     fn save(&self) -> SavedChip {
         SavedChip {
@@ -86,6 +95,15 @@ pub trait Chip: std::fmt::Debug {
 
     /// Using the array of String you provided in `save_data` , you must restore the state of your chip.
     fn load_data(&mut self, _chip_data: &[String]) {}
+}
+impl std::fmt::Debug for dyn Chip {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        let info = self.get_info();
+        fmt.write_str(info.name)?;
+        fmt.write_str("\n")?;
+        fmt.write_str(&info.data)?;
+        Ok(())
+    }
 }
 
 /// Factory function for chips that are built-in for the virt_ic crate.

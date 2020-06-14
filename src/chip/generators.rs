@@ -1,5 +1,5 @@
 //! Generators that provide fixed currents
-use super::{Chip, Pin, PinType};
+use super::{Chip, ChipInfo, Pin, PinType};
 use crate::State;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -24,6 +24,8 @@ impl Default for Generator {
 }
 
 impl Generator {
+    pub const TYPE: &'static str = "virt_ic::Generator";
+
     pub const VCC: u8 = 1;
     pub const GND: u8 = 2;
 
@@ -46,7 +48,7 @@ impl Chip for Generator {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::Generator"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         2
@@ -59,6 +61,15 @@ impl Chip for Generator {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Generator",
+            description: "A simple generator that provides VCC and GND for chips",
+            data: String::new()
+        }
+    }
+
     fn run(&mut self, _: std::time::Duration) {
         self.pin[0].borrow_mut().state = State::High;
         self.pin[1].borrow_mut().state = State::Low;

@@ -1,5 +1,5 @@
 //! Logic Gates like OR, AND, NOT ...
-use super::{Chip, Pin, PinType};
+use super::{Chip, ChipInfo, Pin, PinType};
 use crate::State;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -30,6 +30,8 @@ impl Default for GateOr {
 }
 
 impl GateOr {
+    pub const TYPE: &'static str = "virt_ic::GateOr";
+
     pub const A: u8 = 1;
     pub const B: u8 = 2;
     pub const A_OR_B: u8 = 3;
@@ -73,7 +75,7 @@ impl Chip for GateOr {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::GateOr"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         14
@@ -86,6 +88,15 @@ impl Chip for GateOr {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Gate OR",
+            description: "A 4-in-one OR gate chip",
+            data: String::new()
+        }
+    }
+
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
         if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {
@@ -156,6 +167,8 @@ impl Default for GateAnd {
 }
 
 impl GateAnd {
+    pub const TYPE: &'static str = "virt_ic::GateAnd";
+
     pub const A: u8 = 1;
     pub const B: u8 = 2;
     pub const A_AND_B: u8 = 3;
@@ -199,7 +212,7 @@ impl Chip for GateAnd {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::GateAnd"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         14
@@ -212,6 +225,15 @@ impl Chip for GateAnd {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Gate AND",
+            description: "A 4-in-one AND gate chip",
+            data: String::new()
+        }
+    }
+
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
         if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {
@@ -282,6 +304,8 @@ impl Default for GateNot {
 }
 
 impl GateNot {
+    pub const TYPE: &'static str = "virt_ic::GateNot";
+
     pub const A: u8 = 1;
     pub const NOT_A: u8 = 2;
     pub const B: u8 = 3;
@@ -325,7 +349,7 @@ impl Chip for GateNot {
         self.uuid
     }
     fn get_type(&self) -> &str {
-        "virt_ic::GateNot"
+        Self::TYPE
     }
     fn get_pin_qty(&self) -> u8 {
         14
@@ -338,6 +362,15 @@ impl Chip for GateNot {
             Err("Pin out of bounds")
         }
     }
+
+    fn get_info(&self) -> ChipInfo {
+        ChipInfo {
+            name: "Gate NOT",
+            description: "A 6-in-one NOT gate chip",
+            data: String::new()
+        }
+    }
+
     fn run(&mut self, _: std::time::Duration) {
         // check alimented
         if self.pin[6].borrow().state == State::Low && self.pin[13].borrow().state == State::High {

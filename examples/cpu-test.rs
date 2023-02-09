@@ -1,10 +1,10 @@
-use virt_ic::*;
-use virt_ic::chip::gates::*;
-use virt_ic::chip::generators::*;
-use virt_ic::chip::memory::*;
-use virt_ic::chip::cpu::*;
-use virt_ic::chip::clocks::*;
 use std::time::Duration;
+use virt_ic::chip::clocks::Clock1kHz;
+use virt_ic::chip::cpu::SimpleCPU;
+use virt_ic::chip::gates::{GateAnd, GateNot};
+use virt_ic::chip::generators::Generator;
+use virt_ic::chip::memory::{Ram256B, Rom256B};
+use virt_ic::{Board, Chip};
 
 #[allow(dead_code)]
 const HLT: u8 = 0x00;
@@ -145,85 +145,90 @@ fn main() {
     let ram = board.new_socket_with(Box::new(Ram256B::new()));
     // rom chip with a simple factorial calculation program
     // pre-compiled to perform a factorial of 5
-    let rom = board.new_socket_with(Box::new(Rom256B::from_data(
-        [
-            // init
-            // 0x00
-            JSR, 0x0F, 0x28,// JSR :zeroing ram
-            // 0x03
-            LDA_NB, 0x00,   // A = 0
-            // 0x05
-            TAH,TAL,        // HL = 0
-            // 0x07
-            LDA_NB, 0x01,   // A = 1
-            // 0x09
-            LDC_NB, 0x02,   // C = 2
-
-            // loop
-            // 0x0B
-            STA_HL,         // [0xHL] = A
-            // 0x0C
-            INL,            // HL++
-            // 0x0D
-            TAB,            // B = A
-            // 0x0E
-            CPC_NB, 0x06,   // CMP C with 6
-            // 0x10
-            BZF, 0x0F, 0x27,// IF Z JMP :end
-            // 0x13
-            LDA_NB, 0x00,   // A = 0
-            // 0x15
-            JSR, 0x0F, 0x1C,// JSR :multiply routine : A = B*C
-            // 0x18
-            INC,            // C++
-            // 0x19
-            JMP, 0x0F, 0x0B,// JMP :loop
-
-            // multiply routine A += B*C
-            // 0x1C
-            CPB_NB, 0x00,   // CMP B with 0
-            // 0x1E
-            BZF, 0x0F, 0x26,// IF Z JMP :multiply rtn
-            // 0x21
-            ADC,            // A += C
-            // 0x22
-            DEB,            // B--
-            // 0x23
-            JMP, 0x0F, 0x1C,// JMP :multiply routine
-            // multiply rtn
-            // 0x26
-            RTN,            // Return
-            // end
-            // 0x27
-            HLT,            // stop the processor
-            // zeroing ram
-            // 0x28
-            LDA_NB, 0x00,
-            // 0x2A
-            STA_HL,         // [HL] = 0
-            // 0x2B
-            INL,            // HL++
-            // 0x2C
-            TLA,            // A = L
-            // 0x2D
-            CMP, 0x10,      // CMP A with 0x10
-            // 0x2F
-            BZF, 0x0F, 0x35,// IF Z JMP :zeroing rtn
-            // 0x32
-            JMP, 0x0F, 0x28,// JMP :zeroing ram
-            // zeroing rtn
-            // 0x35
-            RTN,            // Return
-            // padding
-            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-            // IRQ address at 0xF00
-            0x0F,0x00,
-            // startup address at 0xF00
-            0x0F,0x00,
-            // stack bank at 0x000 to 0x0FF
-            0x00
-        ]
-    )));
+    let rom = board.new_socket_with(Box::new(Rom256B::from_data([
+        // init
+        // 0x00
+        JSR, 0x0F, 0x28, // JSR :zeroing ram
+        // 0x03
+        LDA_NB, 0x00, // A = 0
+        // 0x05
+        TAH, TAL, // HL = 0
+        // 0x07
+        LDA_NB, 0x01, // A = 1
+        // 0x09
+        LDC_NB, 0x02, // C = 2
+        // loop
+        // 0x0B
+        STA_HL, // [0xHL] = A
+        // 0x0C
+        INL, // HL++
+        // 0x0D
+        TAB, // B = A
+        // 0x0E
+        CPC_NB, 0x06, // CMP C with 6
+        // 0x10
+        BZF, 0x0F, 0x27, // IF Z JMP :end
+        // 0x13
+        LDA_NB, 0x00, // A = 0
+        // 0x15
+        JSR, 0x0F, 0x1C, // JSR :multiply routine : A = B*C
+        // 0x18
+        INC, // C++
+        // 0x19
+        JMP, 0x0F, 0x0B, // JMP :loop
+        // multiply routine A += B*C
+        // 0x1C
+        CPB_NB, 0x00, // CMP B with 0
+        // 0x1E
+        BZF, 0x0F, 0x26, // IF Z JMP :multiply rtn
+        // 0x21
+        ADC, // A += C
+        // 0x22
+        DEB, // B--
+        // 0x23
+        JMP, 0x0F, 0x1C, // JMP :multiply routine
+        // multiply rtn
+        // 0x26
+        RTN, // Return
+        // end
+        // 0x27
+        HLT, // stop the processor
+        // zeroing ram
+        // 0x28
+        LDA_NB, 0x00, // 0x2A
+        STA_HL, // [HL] = 0
+        // 0x2B
+        INL, // HL++
+        // 0x2C
+        TLA, // A = L
+        // 0x2D
+        CMP, 0x10, // CMP A with 0x10
+        // 0x2F
+        BZF, 0x0F, 0x35, // IF Z JMP :zeroing rtn
+        // 0x32
+        JMP, 0x0F, 0x28, // JMP :zeroing ram
+        // zeroing rtn
+        // 0x35
+        RTN, // Return
+        // padding
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, // IRQ address at 0xF00
+        0x0F, 0x00, // startup address at 0xF00
+        0x0F, 0x00, // stack bank at 0x000 to 0x0FF
+        0x00,
+    ])));
 
     // instanciate sockets with their chips
     let gen = board.new_socket_with(Box::new(Generator::new()));
@@ -235,113 +240,165 @@ fn main() {
     {
         // VCC
         let trc = board.new_trace();
-        trc.borrow_mut().connect(gen.borrow_mut().get_pin(Generator::VCC).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::VCC).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::VCC).unwrap());
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::VCC).unwrap());
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::RESET).unwrap());
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::IRQ).unwrap());
-        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock1kHz::VCC).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::VCC).unwrap());
-        trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(gen.borrow_mut().get_pin(Generator::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::RESET).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::IRQ).unwrap());
+        trc.borrow_mut()
+            .connect(clk.borrow_mut().get_pin(Clock1kHz::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::VCC).unwrap());
+        trc.borrow_mut()
+            .connect(not.borrow_mut().get_pin(GateNot::VCC).unwrap());
     }
     {
         // GND
         let trc = board.new_trace();
-        trc.borrow_mut().connect(gen.borrow_mut().get_pin(Generator::GND).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::GND).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::GND).unwrap());
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::GND).unwrap());
-        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock1kHz::GND).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::GND).unwrap());
-        trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::GND).unwrap());
+        trc.borrow_mut()
+            .connect(gen.borrow_mut().get_pin(Generator::GND).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::GND).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::GND).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::GND).unwrap());
+        trc.borrow_mut()
+            .connect(clk.borrow_mut().get_pin(Clock1kHz::GND).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::GND).unwrap());
+        trc.borrow_mut()
+            .connect(not.borrow_mut().get_pin(GateNot::GND).unwrap());
     }
     {
         // CLK
         let trc = board.new_trace();
-        trc.borrow_mut().connect(clk.borrow_mut().get_pin(Clock1kHz::CLK).unwrap());
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::CLOCK).unwrap());
+        trc.borrow_mut()
+            .connect(clk.borrow_mut().get_pin(Clock1kHz::CLK).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::CLOCK).unwrap());
     }
     {
         // AND
         // link A&B with C&D to make (A&B)&(C&D)
         // also link the result in a not gate
         let trc = board.new_trace();
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::A_AND_B).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::G).unwrap());
-        
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::A_AND_B).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::G).unwrap());
+
         let trc = board.new_trace();
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::C_AND_D).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::H).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::C_AND_D).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::H).unwrap());
     }
 
     // CPU connections
     for i in 0..=6 {
         // A0 - A6
         let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::A0+i).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::A0+i).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::A0+i).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::A0 + i).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::A0 + i).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::A0 + i).unwrap());
     }
     {
         // A7
         let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::A7).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::A7).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::A7).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::A7).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::A7).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::A7).unwrap());
     }
     {
         // CPU A8 - 12
         let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::A8).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::A).unwrap());
-        
-        let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::A9).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::B).unwrap());
-        
-        let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::A10).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::C).unwrap());
-        
-        let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::A11).unwrap());
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::D).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::A8).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::A).unwrap());
 
         let trc = board.new_trace();
-        trc.borrow_mut().connect(and.borrow_mut().get_pin(GateAnd::G_AND_H).unwrap());
-        trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::A).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::CS).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::A9).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::B).unwrap());
 
+        let trc = board.new_trace();
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::A10).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::C).unwrap());
+
+        let trc = board.new_trace();
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::A11).unwrap());
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::D).unwrap());
+
+        let trc = board.new_trace();
+        trc.borrow_mut()
+            .connect(and.borrow_mut().get_pin(GateAnd::G_AND_H).unwrap());
+        trc.borrow_mut()
+            .connect(not.borrow_mut().get_pin(GateNot::A).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::CS).unwrap());
     }
-    for i in 0..=7{
+    for i in 0..=7 {
         // CPU IO0-7
         let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::IO0+i).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::IO0+i).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::IO0+i).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::IO0 + i).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::IO0 + i).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::IO0 + i).unwrap());
     }
     {
         // Ram and Rom Chip Select, Write Enable and Output Enable
         let trc = board.new_trace();
-        trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::NOT_A).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::CS).unwrap());
+        trc.borrow_mut()
+            .connect(not.borrow_mut().get_pin(GateNot::NOT_A).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::CS).unwrap());
 
         let trc = board.new_trace();
-        trc.borrow_mut().connect(cpu.borrow_mut().get_pin(SimpleCPU::RW).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::WE).unwrap());
-        trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::B).unwrap());
+        trc.borrow_mut()
+            .connect(cpu.borrow_mut().get_pin(SimpleCPU::RW).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::WE).unwrap());
+        trc.borrow_mut()
+            .connect(not.borrow_mut().get_pin(GateNot::B).unwrap());
 
         let trc = board.new_trace();
-        trc.borrow_mut().connect(not.borrow_mut().get_pin(GateNot::NOT_B).unwrap());
-        trc.borrow_mut().connect(ram.borrow_mut().get_pin(Ram256B::OE).unwrap());
-        trc.borrow_mut().connect(rom.borrow_mut().get_pin(Rom256B::OE).unwrap());
+        trc.borrow_mut()
+            .connect(not.borrow_mut().get_pin(GateNot::NOT_B).unwrap());
+        trc.borrow_mut()
+            .connect(ram.borrow_mut().get_pin(Ram256B::OE).unwrap());
+        trc.borrow_mut()
+            .connect(rom.borrow_mut().get_pin(Rom256B::OE).unwrap());
     }
     // initialize the board
     board.run(Duration::from_millis(1));
 
     println!("ROM:\n{:?}", rom.borrow_mut().get_chip().as_ref().unwrap());
-    println!("RAM before:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
+    println!(
+        "RAM before:\n{:?}",
+        ram.borrow_mut().get_chip().as_ref().unwrap()
+    );
 
     println!("========================================");
     println!("Running ...");
@@ -351,6 +408,12 @@ fn main() {
     println!("Done !");
     println!("========================================");
 
-    println!("RAM after:\n{:?}", ram.borrow_mut().get_chip().as_ref().unwrap());
-    println!("CPU state:\n{:?}", cpu.borrow_mut().get_chip().as_ref().unwrap());
+    println!(
+        "RAM after:\n{:?}",
+        ram.borrow_mut().get_chip().as_ref().unwrap()
+    );
+    println!(
+        "CPU state:\n{:?}",
+        cpu.borrow_mut().get_chip().as_ref().unwrap()
+    );
 }

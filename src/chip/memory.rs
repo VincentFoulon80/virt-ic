@@ -41,13 +41,15 @@ impl Default for Ram256B {
 }
 impl ToString for Ram256B {
     fn to_string(&self) -> std::string::String {
-        let mut string = String::from("ADR| 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
----+------------------------------------------------");
+        let mut string = String::from(
+            "ADR| 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+---+------------------------------------------------",
+        );
         for (addr, byte) in self.ram.iter().enumerate() {
             if addr % 16 == 0 {
-                string.push_str(&format!("\n {:02X}|", addr));
+                string.push_str(&format!("\n {addr:02X}|"));
             }
-            string.push_str(&format!(" {:02X}", byte));
+            string.push_str(&format!(" {byte:02X}"));
         }
         string
     }
@@ -80,7 +82,7 @@ impl Ram256B {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        Ram256B {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
@@ -114,18 +116,10 @@ impl Ram256B {
     fn get_address(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 3..10 {
-            let bit = if self.pin[i].borrow().state == State::High {
-                1
-            } else {
-                0
-            };
+            let bit = u8::from(self.pin[i].borrow().state == State::High);
             addr += bit << (i - 3);
         }
-        let bit = if self.pin[11].borrow().state == State::High {
-            1
-        } else {
-            0
-        };
+        let bit = u8::from(self.pin[11].borrow().state == State::High);
         addr += bit << 7;
         addr
     }
@@ -133,11 +127,7 @@ impl Ram256B {
     fn get_data(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 12..20 {
-            let bit = if self.pin[i].borrow().state == State::High {
-                1
-            } else {
-                0
-            };
+            let bit = u8::from(self.pin[i].borrow().state == State::High);
             addr += bit << (i - 12);
         }
         addr
@@ -163,7 +153,7 @@ impl Chip for Ram256B {
             name: "Ram 256 Bytes",
             description: "A Random Access Memory Chip that can contains 256 Bytes of data.
 The data is not kept if the chip is no longer powered.",
-            data: self.to_string()
+            data: self.to_string(),
         }
     }
 
@@ -219,7 +209,7 @@ The data is not kept if the chip is no longer powered.",
         } else if self.powered {
             // turn off every pin
             for i in 0..22 {
-                self.pin[i].borrow_mut().state = State::Undefined
+                self.pin[i].borrow_mut().state = State::Undefined;
             }
             self.powered = false;
         }
@@ -272,13 +262,15 @@ impl Default for Rom256B {
 }
 impl ToString for Rom256B {
     fn to_string(&self) -> std::string::String {
-        let mut string = String::from("ADR| 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
----+------------------------------------------------");
+        let mut string = String::from(
+            "ADR| 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+---+------------------------------------------------",
+        );
         for (addr, byte) in self.rom.iter().enumerate() {
             if addr % 16 == 0 {
-                string.push_str(&format!("\n {:02X}|", addr));
+                string.push_str(&format!("\n {addr:02X}|"));
             }
-            string.push_str(&format!(" {:02X}", byte));
+            string.push_str(&format!(" {byte:02X}"));
         }
         string
     }
@@ -310,7 +302,7 @@ impl Rom256B {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        Rom256B {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
@@ -340,8 +332,8 @@ impl Rom256B {
         }
     }
 
-    pub fn from_data(data: [u8; 256]) -> Rom256B {
-        let mut rom = Rom256B::new();
+    pub fn from_data(data: [u8; 256]) -> Self {
+        let mut rom = Self::new();
         rom.load_data(data);
         rom
     }
@@ -353,18 +345,10 @@ impl Rom256B {
     fn get_address(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 3..10 {
-            let bit = if self.pin[i].borrow().state == State::High {
-                1
-            } else {
-                0
-            };
+            let bit = u8::from(self.pin[i].borrow().state == State::High);
             addr += bit << (i - 3);
         }
-        let bit = if self.pin[11].borrow().state == State::High {
-            1
-        } else {
-            0
-        };
+        let bit = u8::from(self.pin[11].borrow().state == State::High);
         addr += bit << 7;
         addr
     }
@@ -390,7 +374,7 @@ impl Chip for Rom256B {
             name: "Rom 256 Bytes",
             description: "A Real Only Memory Chip that can contains 256 Bytes of data.
 The data is kept if the chip is no longer powered.",
-            data: self.to_string()
+            data: self.to_string(),
         }
     }
 
@@ -428,7 +412,7 @@ The data is kept if the chip is no longer powered.",
         } else {
             // turn off every pin
             for i in 0..22 {
-                self.pin[i].borrow_mut().state = State::Undefined
+                self.pin[i].borrow_mut().state = State::Undefined;
             }
         }
     }

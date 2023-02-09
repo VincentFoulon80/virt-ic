@@ -49,7 +49,7 @@ impl GateOr {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        GateOr {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
@@ -131,7 +131,7 @@ impl Chip for GateOr {
         } else {
             // turn off every pin
             for i in 0..14 {
-                self.pin[i].borrow_mut().state = State::Low
+                self.pin[i].borrow_mut().state = State::Low;
             }
         }
     }
@@ -182,7 +182,7 @@ impl GateAnd {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        GateAnd {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
@@ -264,7 +264,7 @@ impl Chip for GateAnd {
         } else {
             // turn off every pin
             for i in 0..14 {
-                self.pin[i].borrow_mut().state = State::Undefined
+                self.pin[i].borrow_mut().state = State::Undefined;
             }
         }
     }
@@ -443,7 +443,7 @@ impl GateNot {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        GateNot {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
@@ -529,7 +529,7 @@ impl Chip for GateNot {
         } else {
             // turn off every pin
             for i in 0..14 {
-                self.pin[i].borrow_mut().state = State::Undefined
+                self.pin[i].borrow_mut().state = State::Undefined;
             }
         }
     }

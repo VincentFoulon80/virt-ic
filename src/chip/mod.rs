@@ -29,8 +29,8 @@ pub struct Pin {
     pub state: State,
 }
 impl Pin {
-    pub fn new(parent_uuid: u128, number: u8, pin_type: PinType) -> Pin {
-        Pin {
+    pub fn new(parent_uuid: u128, number: u8, pin_type: PinType) -> Self {
+        Self {
             parent: parent_uuid,
             number,
             pin_type,
@@ -42,7 +42,7 @@ impl Pin {
 pub struct ChipInfo {
     pub name: &'static str,
     pub description: &'static str,
-    pub data: String
+    pub data: String,
 }
 
 /// Chip : a trait that represents chips on board
@@ -58,8 +58,8 @@ pub trait Chip {
     fn run(&mut self, elapsed_time: std::time::Duration);
     /// Returns the number of pins the chip has
     fn get_pin_qty(&self) -> u8;
-    /// Get a pin of the chip. Pin will be in safe range (1..pin_qty)  
-    /// There is no way that you don't provide a pin since you have said in pin_qty how many pins your chip have
+    /// Get a pin of the chip. Pin will be in safe range (`1..pin_qty`)  
+    /// There is no way that you don't provide a pin since you have said in `pin_qty` how many pins your chip have
     fn _get_pin(&mut self, pin: u8) -> Rc<RefCell<Pin>>;
     /// Get a pin of the chip
     fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
@@ -71,11 +71,8 @@ pub trait Chip {
     }
     /// Get the state of the specified Pin
     fn get_pin_state(&mut self, pin: u8) -> State {
-        if let Ok(pin) = self.get_pin(pin) {
-            pin.borrow().state.clone()
-        } else {
-            State::Undefined
-        }
+        self.get_pin(pin)
+            .map_or(State::Undefined, |pin| pin.borrow().state.clone())
     }
     /// Set the state of the specified Pin
     fn set_pin_state(&mut self, pin: u8, state: &State) {
@@ -85,7 +82,7 @@ pub trait Chip {
     }
     /// Get chip generic informations and data
     fn get_info(&self) -> ChipInfo;
-    /// Save the chip to a SavedChip struct
+    /// Save the chip to a `SavedChip` struct
     fn save(&self) -> SavedChip {
         SavedChip {
             uuid: self.get_uuid(),
@@ -98,7 +95,7 @@ pub trait Chip {
     fn save_data(&self) -> Vec<String> {
         vec![]
     }
-    /// Restore the chip from a SavedChip struct
+    /// Restore the chip from a `SavedChip` struct
     fn load(&mut self, saved_chip: &SavedChip) {
         self.load_data(&saved_chip.chip_data);
     }
@@ -115,7 +112,7 @@ impl std::fmt::Debug for dyn Chip {
     }
 }
 
-/// Factory function for chips that are built-in for the virt_ic crate.
+/// Factory function for chips that are built-in for the `virt_ic` crate.
 ///
 /// You can provide your own factory function to the `Board::Load` to build your custom chips.
 /// ```

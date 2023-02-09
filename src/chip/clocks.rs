@@ -35,7 +35,7 @@ impl Clock100Hz {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        Clock100Hz {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
@@ -67,17 +67,17 @@ impl Chip for Clock100Hz {
         ChipInfo {
             name: "Clock 100Hz",
             description: "A clock that pulses at 100 Hertz",
-            data: String::new()
+            data: String::new(),
         }
     }
 
     fn run(&mut self, time_elapsed: std::time::Duration) {
+        const LIMIT: Duration = Duration::from_millis(10);
         if self.active {
             self.active = false;
             self.pin[0].borrow_mut().state = State::Low;
         }
         // check alimented
-        const LIMIT: Duration = Duration::from_millis(10);
         if self.pin[1].borrow().state == State::Low && self.pin[3].borrow().state == State::High {
             self.timer += time_elapsed;
             if self.timer > LIMIT {
@@ -135,7 +135,7 @@ impl Clock1kHz {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        Clock1kHz {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
@@ -167,17 +167,17 @@ impl Chip for Clock1kHz {
         ChipInfo {
             name: "Clock 1kHz",
             description: "A clock that pulses at 1 kilo-Hertz",
-            data: String::new()
+            data: String::new(),
         }
     }
 
     fn run(&mut self, time_elapsed: std::time::Duration) {
+        const LIMIT: Duration = Duration::from_millis(1);
         if self.active {
             self.active = false;
             self.pin[0].borrow_mut().state = State::Low;
         }
         // check alimented
-        const LIMIT: Duration = Duration::from_millis(1);
         if self.pin[1].borrow().state == State::Low && self.pin[3].borrow().state == State::High {
             self.timer += time_elapsed;
             if self.timer > LIMIT {

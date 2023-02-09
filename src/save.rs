@@ -15,11 +15,11 @@ pub struct SavedSocket {
     pub chip: Option<SavedChip>,
 }
 impl SavedSocket {
-    pub fn new() -> SavedSocket {
-        SavedSocket { chip: None }
+    pub fn new() -> Self {
+        Self { chip: None }
     }
     pub fn set_chip(&mut self, chip: SavedChip) {
-        self.chip = Some(chip)
+        self.chip = Some(chip);
     }
 }
 
@@ -28,8 +28,8 @@ pub struct SavedTrace {
     pub pins: Vec<Pin>,
 }
 impl SavedTrace {
-    pub fn new() -> SavedTrace {
-        SavedTrace { pins: vec![] }
+    pub fn new() -> Self {
+        Self { pins: vec![] }
     }
 
     pub fn add_trace(&mut self, pin: Pin) {
@@ -45,7 +45,7 @@ pub struct SavedBoard {
 
 impl SavedBoard {
     pub fn new() -> Self {
-        SavedBoard {
+        Self {
             sockets: vec![],
             traces: vec![],
         }
@@ -61,7 +61,7 @@ impl SavedBoard {
         let mut board = Board::new();
         let mut loaded_chips: Vec<(u128, Rc<RefCell<Socket>>)> = vec![];
 
-        for s_socket in self.sockets.iter() {
+        for s_socket in &self.sockets {
             let socket = board.new_socket();
             if let Some(s_chip) = &s_socket.chip {
                 if let Some(chip) = chip_factory(&s_chip.chip_type) {
@@ -72,15 +72,15 @@ impl SavedBoard {
             }
         }
 
-        for s_trace in self.traces.iter() {
+        for s_trace in &self.traces {
             let trace = board.new_trace();
-            for s_pin in s_trace.pins.iter() {
-                for l_chip in loaded_chips.iter() {
+            for s_pin in &s_trace.pins {
+                for l_chip in &loaded_chips {
                     if s_pin.parent == l_chip.0 {
                         if let Ok(pin) = l_chip.1.borrow_mut().get_pin(s_pin.number) {
                             pin.borrow_mut().state = s_pin.state.clone();
                             pin.borrow_mut().pin_type = s_pin.pin_type.clone();
-                            trace.borrow_mut().connect(pin.clone())
+                            trace.borrow_mut().connect(pin.clone());
                         }
                     }
                 }

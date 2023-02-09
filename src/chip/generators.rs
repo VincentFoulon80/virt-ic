@@ -31,7 +31,7 @@ impl Generator {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        let gen = Generator {
+        let gen = Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
@@ -62,7 +62,7 @@ impl Chip for Generator {
         ChipInfo {
             name: "Generator",
             description: "A simple generator that provides VCC and GND for chips",
-            data: String::new()
+            data: String::new(),
         }
     }
 

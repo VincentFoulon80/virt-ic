@@ -81,7 +81,7 @@ use std::rc::Rc;
 /// - | - | - |
 /// JML (0x20) | - |Jumps to the address HL
 /// JSL (0x21) | - |Jumps to subroutine at address HL
-/// RTN (0x22) | - |Return from SubRoutine|
+/// RTN (0x22) | - |Return from ``SubRoutine``|
 /// - | - | - |
 /// STA (0x48) | - |Stores the value of accumulator into address [HL]|
 /// STB (0x49) | - |Stores the value of B register into address [HL]|
@@ -170,11 +170,28 @@ impl Default for SimpleCPU {
         Self::new()
     }
 }
-impl std::string::ToString for SimpleCPU {   
+impl std::string::ToString for SimpleCPU {
     fn to_string(&self) -> std::string::String {
-        format!("PC: {:03X} ADR: {:03X} IO: {:02X} Op: {:02X} $1: {:02X} $2: {:02X}
+        format!(
+            "PC: {:03X} ADR: {:03X} IO: {:02X} Op: {:02X} $1: {:02X} $2: {:02X}
 A: {:02X} B: {:02X} C: {:02X} H: {:02X} L: {:02X} SP: {:02X}
-mc: {} exec: {} halted: {}", self.program_counter, self.get_address(), self.get_data(), self.current_opcode, self.param_first, self.param_second, self.accumulator, self.reg_b, self.reg_c, self.reg_h, self.reg_l, self.stack_pointer, self.microcode_state, self.executing, self.halted)
+mc: {} exec: {} halted: {}",
+            self.program_counter,
+            self.get_address(),
+            self.get_data(),
+            self.current_opcode,
+            self.param_first,
+            self.param_second,
+            self.accumulator,
+            self.reg_b,
+            self.reg_c,
+            self.reg_h,
+            self.reg_l,
+            self.stack_pointer,
+            self.microcode_state,
+            self.executing,
+            self.halted
+        )
     }
 }
 
@@ -210,7 +227,7 @@ impl SimpleCPU {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        SimpleCPU {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
@@ -265,11 +282,7 @@ impl SimpleCPU {
     fn get_address(&self) -> u16 {
         let mut addr: u16 = 0;
         for i in 0..12 {
-            let bit = if self.pin[i].borrow().state == State::High {
-                1
-            } else {
-                0
-            };
+            let bit = u16::from(self.pin[i].borrow().state == State::High);
             addr += bit << i;
         }
         addr
@@ -290,11 +303,7 @@ impl SimpleCPU {
     fn get_data(&self) -> u8 {
         let mut addr: u8 = 0;
         for i in 16..24 {
-            let bit = if self.pin[i].borrow().state == State::High {
-                1
-            } else {
-                0
-            };
+            let bit = u8::from(self.pin[i].borrow().state == State::High);
             addr += bit << (i - 16);
         }
         addr
@@ -311,7 +320,7 @@ impl SimpleCPU {
         self.pin[24].borrow_mut().state = State::Low;
     }
 
-    fn set_iopin_type(&mut self, pin_type: PinType) {
+    fn set_iopin_type(&mut self, pin_type: &PinType) {
         // set IO pins
         for i in 0..8 {
             self.pin[i + 16].borrow_mut().pin_type = pin_type.clone();
@@ -342,14 +351,14 @@ impl SimpleCPU {
             1 => {
                 // get first part of starting address
                 // + query LSB address
-                self.program_counter += (self.get_data() as u16) << 8;
+                self.program_counter += u16::from(self.get_data()) << 8;
                 self.program_counter &= 0xFFF;
                 self.set_address(0xFFE);
             }
             2 => {
                 // get second part of starting address
                 // + query Stack pointer bank
-                self.program_counter += self.get_data() as u16;
+                self.program_counter += u16::from(self.get_data());
                 self.set_address(0xFFF);
             }
             3 => {
@@ -371,8 +380,9 @@ impl SimpleCPU {
         self.executing = false;
         let mut check_zero = true;
 
-        let push_stack = |myself: &mut SimpleCPU, data: u8| {
-            let sp = (((myself.stack_bank as u16) << 8) + myself.stack_pointer as u16) & 0xFFF;
+        let push_stack = |myself: &mut Self, data: u8| {
+            let sp =
+                ((u16::from(myself.stack_bank) << 8) + u16::from(myself.stack_pointer)) & 0xFFF;
             myself.set_address(sp);
             myself.set_data(data);
             myself.stack_pointer = myself.stack_pointer.wrapping_sub(1);
@@ -380,9 +390,10 @@ impl SimpleCPU {
                 myself.flag_overflow = true;
             }
         };
-        let req_pull_stack = |myself: &mut SimpleCPU| {
+        let req_pull_stack = |myself: &mut Self| {
             myself.stack_pointer = myself.stack_pointer.wrapping_add(1);
-            let sp = (((myself.stack_bank as u16) << 8) + myself.stack_pointer as u16) & 0xFFF;
+            let sp =
+                ((u16::from(myself.stack_bank) << 8) + u16::from(myself.stack_pointer)) & 0xFFF;
             if myself.stack_pointer == 0xFF {
                 myself.flag_neg = false;
             }
@@ -412,7 +423,7 @@ impl SimpleCPU {
             }
             0x03 => {
                 // INL : Increment HL
-                let mut hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                let mut hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                 hl = hl.wrapping_add(1);
                 if hl == 0 {
                     self.flag_overflow = true;
@@ -423,7 +434,7 @@ impl SimpleCPU {
             }
             0x04 => {
                 // DEL : Decrement HL
-                let mut hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                let mut hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                 hl = hl.wrapping_sub(1);
                 if hl == 0xFFFF {
                     self.flag_overflow = false;
@@ -438,8 +449,8 @@ impl SimpleCPU {
             }
             0x06 => {
                 // ADB : Add B to Acc
-                let add = self.accumulator as u16 + self.reg_b as u16;
-                if add > u8::MAX as u16 {
+                let add = u16::from(self.accumulator) + u16::from(self.reg_b);
+                if add > u16::from(u8::MAX) {
                     self.flag_carry = true;
                     self.flag_overflow = true;
                 }
@@ -447,8 +458,8 @@ impl SimpleCPU {
             }
             0x07 => {
                 // ADC : Add C to Acc
-                let add = self.accumulator as u16 + self.reg_c as u16;
-                if add > u8::MAX as u16 {
+                let add = u16::from(self.accumulator) + u16::from(self.reg_c);
+                if add > u16::from(u8::MAX) {
                     self.flag_carry = true;
                     self.flag_overflow = true;
                 }
@@ -535,26 +546,26 @@ impl SimpleCPU {
             0x14 => {
                 // CPB : Compare B with Acc
                 check_zero = false;
-                let compare = self.accumulator as i16 - self.reg_b as i16;
+                let compare = i16::from(self.accumulator) - i16::from(self.reg_b);
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
             0x15 => {
                 // CPC : Compare C with Acc
                 check_zero = false;
-                let compare = self.accumulator as i16 - self.reg_c as i16;
+                let compare = i16::from(self.accumulator) - i16::from(self.reg_c);
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
             0x16 => {
                 // SUB : Substract B to Acc
-                let sub = self.accumulator as i16 - self.reg_b as i16;
+                let sub = i16::from(self.accumulator) - i16::from(self.reg_b);
                 self.flag_neg = sub < 0;
                 self.accumulator -= self.reg_b;
             }
             0x17 => {
                 // SUC : Substract C with Acc
-                let sub = self.accumulator as i16 - self.reg_c as i16;
+                let sub = i16::from(self.accumulator) - i16::from(self.reg_c);
                 self.flag_neg = sub < 0;
                 self.accumulator -= self.reg_c;
             }
@@ -600,7 +611,7 @@ impl SimpleCPU {
             }
             0x20 => {
                 // JML : Jump to HL
-                self.program_counter = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                self.program_counter = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
             }
             0x21 => {
                 // JSL : Jump Subroutine to HL
@@ -613,7 +624,7 @@ impl SimpleCPU {
                     1 => {
                         let addr_h = (self.program_counter >> 8) as u8;
                         push_stack(self, addr_h);
-                        self.program_counter = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                        self.program_counter = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                     }
                     _ => {}
                 }
@@ -627,32 +638,32 @@ impl SimpleCPU {
                     }
                     1 => {
                         self.program_counter = 0;
-                        self.program_counter += (self.get_data() as u16) << 8;
+                        self.program_counter += u16::from(self.get_data()) << 8;
                         self.program_counter &= 0xFFF;
                         req_pull_stack(self);
                         self.executing = true;
                     }
                     2 => {
-                        self.program_counter += self.get_data() as u16;
+                        self.program_counter += u16::from(self.get_data());
                     }
                     _ => {}
                 }
             }
             0x48 => {
                 // STA [HL]: Store Acc in addr [HL]
-                let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                 self.set_address(hl);
                 self.set_data(self.accumulator);
             }
             0x49 => {
                 // STB [HL]: Store B in addr [HL]
-                let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                 self.set_address(hl);
                 self.set_data(self.reg_b);
             }
             0x4A => {
                 // STC [HL]: Store C in addr [HL]
-                let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                 self.set_address(hl);
                 self.set_data(self.reg_c);
             }
@@ -660,7 +671,7 @@ impl SimpleCPU {
                 // LDB [HL]: Load value of addr [HL] in B
                 match self.microcode_state {
                     0 => {
-                        let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                        let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                         self.set_address(hl);
                         self.executing = true;
                     }
@@ -674,7 +685,7 @@ impl SimpleCPU {
                 // LDC [HL]: Load value of addr [HL] in C
                 match self.microcode_state {
                     0 => {
-                        let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                        let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                         self.set_address(hl);
                         self.executing = true;
                     }
@@ -688,7 +699,7 @@ impl SimpleCPU {
                 // LDA [HL]: Load value of addr [HL] in Acc
                 match self.microcode_state {
                     0 => {
-                        let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
+                        let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
                         self.set_address(hl);
                         self.executing = true;
                     }
@@ -702,8 +713,8 @@ impl SimpleCPU {
                 // LDA [HL+B]: Load value of addr [HL+B] in Acc
                 match self.microcode_state {
                     0 => {
-                        let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
-                        self.set_address(hl + self.reg_b as u16);
+                        let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
+                        self.set_address(hl + u16::from(self.reg_b));
                         self.executing = true;
                     }
                     1 => {
@@ -716,8 +727,8 @@ impl SimpleCPU {
                 // LDA [HL+C]: Load value of addr [HL+C] in Acc
                 match self.microcode_state {
                     0 => {
-                        let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
-                        self.set_address(hl + self.reg_c as u16);
+                        let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
+                        self.set_address(hl + u16::from(self.reg_c));
                         self.executing = true;
                     }
                     1 => {
@@ -734,7 +745,7 @@ impl SimpleCPU {
                 // LDA [$1] : Zero page load to Acc
                 match self.microcode_state {
                     0 => {
-                        self.set_address(self.param_first as u16);
+                        self.set_address(u16::from(self.param_first));
                         self.executing = true;
                     }
                     1 => {
@@ -747,8 +758,8 @@ impl SimpleCPU {
                 // LDA [H$1] : Load [H$1] into Acc
                 match self.microcode_state {
                     0 => {
-                        let h0 = (self.reg_h as u16) << 8;
-                        self.set_address(h0 + self.param_first as u16);
+                        let h0 = u16::from(self.reg_h) << 8;
+                        self.set_address(h0 + u16::from(self.param_first));
                         self.executing = true;
                     }
                     1 => {
@@ -761,8 +772,8 @@ impl SimpleCPU {
                 // LDA [HL]+$1 : Load [HL]+$1 into Acc
                 match self.microcode_state {
                     0 => {
-                        let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
-                        self.set_address(hl + self.param_first as u16);
+                        let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
+                        self.set_address(hl + u16::from(self.param_first));
                         self.executing = true;
                     }
                     1 => {
@@ -773,13 +784,13 @@ impl SimpleCPU {
             }
             0x54 => {
                 // LDB $1 : Load $1 into B
-                self.reg_b = self.param_first
+                self.reg_b = self.param_first;
             }
             0x55 => {
                 // LDB [$1] : Zero page load to B
                 match self.microcode_state {
                     0 => {
-                        self.set_address(self.param_first as u16);
+                        self.set_address(u16::from(self.param_first));
                         self.executing = true;
                     }
                     1 => {
@@ -790,13 +801,13 @@ impl SimpleCPU {
             }
             0x56 => {
                 // LDC $1 : Load $1 into C
-                self.reg_c = self.param_first
+                self.reg_c = self.param_first;
             }
             0x57 => {
                 // LDC [$1] : Zero page load to C
                 match self.microcode_state {
                     0 => {
-                        self.set_address(self.param_first as u16);
+                        self.set_address(u16::from(self.param_first));
                         self.executing = true;
                     }
                     1 => {
@@ -805,57 +816,58 @@ impl SimpleCPU {
                     _ => {}
                 }
             }
-            0x58 => {
+            0x58 | 0xC1 => {
                 // STA [$1] : Zero page store Acc
-                self.set_address(self.param_first as u16);
+                self.set_address(u16::from(self.param_first));
                 self.set_data(self.accumulator);
             }
             0x59 => {
                 // STA [H0+$1] : Store Acc to [H$1]
-                let h0 = (self.reg_h as u16) << 8;
-                self.set_address(h0 + self.param_first as u16);
+                let h0 = u16::from(self.reg_h) << 8;
+                self.set_address(h0 + u16::from(self.param_first));
                 self.set_data(self.accumulator);
             }
             0x5A => {
                 // STA [HL+$1] : Store Acc to [HL+$1]
-                let hl = ((self.reg_h as u16) << 8) + self.reg_l as u16;
-                self.set_address(hl + self.param_first as u16);
+                let hl = (u16::from(self.reg_h) << 8) + u16::from(self.reg_l);
+                self.set_address(hl + u16::from(self.param_first));
                 self.set_data(self.accumulator);
             }
             0x5B => {
                 // STB [$1] : Zero page store B
-                self.set_address(self.param_first as u16);
+                self.set_address(u16::from(self.param_first));
                 self.set_data(self.reg_b);
             }
             0x5C => {
                 // STC [$1] : Zero page store C
-                self.set_address(self.param_first as u16);
+                self.set_address(u16::from(self.param_first));
                 self.set_data(self.reg_c);
             }
             0x60 => {
                 // CMP : compare Acc with $1
                 check_zero = false;
-                let compare = self.accumulator as i16 - self.param_first as i16;
+                let compare = i16::from(self.accumulator) - i16::from(self.param_first);
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
             0x61 => {
                 // CPB : compare B with $1
                 check_zero = false;
-                let compare = self.reg_b as i16 - self.param_first as i16;
+                let compare = i16::from(self.reg_b) - i16::from(self.param_first);
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
             0x62 => {
                 // CPC : compare C with $1
                 check_zero = false;
-                let compare = self.reg_c as i16 - self.param_first as i16;
+                let compare = i16::from(self.reg_c) - i16::from(self.param_first);
                 self.flag_zero = compare == 0;
                 self.flag_neg = compare < 0;
             }
             0xB0 => {
                 // JMP : Jump to $1$2
-                self.program_counter = ((self.param_first as u16) << 8) + self.param_second as u16;
+                self.program_counter =
+                    (u16::from(self.param_first) << 8) + u16::from(self.param_second);
             }
             0xB1 => {
                 // JSR : Jump Subroutine to $1$2
@@ -869,7 +881,7 @@ impl SimpleCPU {
                         let addr_h = (self.program_counter >> 8) as u8;
                         push_stack(self, addr_h);
                         self.program_counter =
-                            ((self.param_first as u16) << 8) + self.param_second as u16;
+                            (u16::from(self.param_first) << 8) + u16::from(self.param_second);
                     }
                     _ => {}
                 }
@@ -878,21 +890,21 @@ impl SimpleCPU {
                 // BCF : Branch on Carry flag to $1$2
                 if self.flag_carry {
                     self.program_counter =
-                        ((self.param_first as u16) << 8) + self.param_second as u16;
+                        (u16::from(self.param_first) << 8) + u16::from(self.param_second);
                 }
             }
             0xB3 => {
                 // BNF : Branch on Negative flag to $1$2
                 if self.flag_neg {
                     self.program_counter =
-                        ((self.param_first as u16) << 8) + self.param_second as u16;
+                        (u16::from(self.param_first) << 8) + u16::from(self.param_second);
                 }
             }
             0xB4 => {
                 // BZF : Branch on Zero flag to $1$2
                 if self.flag_zero {
                     self.program_counter =
-                        ((self.param_first as u16) << 8) + self.param_second as u16;
+                        (u16::from(self.param_first) << 8) + u16::from(self.param_second);
                 }
             }
             0xC0 => {
@@ -900,7 +912,7 @@ impl SimpleCPU {
                 match self.microcode_state {
                     0 => {
                         self.set_address(
-                            ((self.param_first as u16) << 8) + self.param_second as u16,
+                            (u16::from(self.param_first) << 8) + u16::from(self.param_second),
                         );
                         self.executing = true;
                     }
@@ -909,11 +921,6 @@ impl SimpleCPU {
                     }
                     _ => {}
                 }
-            }
-            0xC1 => {
-                // STA [$1$2] : store Acc into [$1$2]
-                self.set_address(self.param_first as u16);
-                self.set_data(self.accumulator);
             }
             _ => {} // do nothing, NOP
         }
@@ -944,7 +951,7 @@ impl Chip for SimpleCPU {
         ChipInfo {
             name: "Simple CPU",
             description: "A fictionnal CPU created for Virt-IC.",
-            data: self.to_string()
+            data: self.to_string(),
         }
     }
 
@@ -957,7 +964,7 @@ impl Chip for SimpleCPU {
         // check alimented
         if self.pin[12].borrow().state == State::Low && self.pin[25].borrow().state == State::High {
             if self.pin[13].borrow().state == State::High && !self.halted {
-                self.set_iopin_type(PinType::Input);
+                self.set_iopin_type(&PinType::Input);
                 if self.initializing {
                     // executes boot sequence
                     self.boot();
@@ -965,7 +972,7 @@ impl Chip for SimpleCPU {
                     // run program
                     self.execute();
                 } else {
-                    let launch_execution = |myself: &mut SimpleCPU| {
+                    let launch_execution = |myself: &mut Self| {
                         // execute opcode with its params
                         myself.executing = true;
                         myself.microcode_state = 0xFF;
@@ -1020,7 +1027,7 @@ impl Chip for SimpleCPU {
         } else {
             // turn off every pin
             for i in 0..22 {
-                self.pin[i].borrow_mut().state = State::Undefined
+                self.pin[i].borrow_mut().state = State::Undefined;
             }
             self.initializing = true;
         }

@@ -15,8 +15,8 @@ pub struct Board {
 
 impl Board {
     /// Create a new empty Board
-    pub fn new() -> Board {
-        Board {
+    pub fn new() -> Self {
+        Self {
             traces: vec![],
             sockets: vec![],
         }
@@ -57,7 +57,7 @@ impl Board {
     }
 
     pub fn get_socket(&mut self, uuid: u128) -> Option<Rc<RefCell<Socket>>> {
-        for socket in self.sockets.iter() {
+        for socket in &self.sockets {
             if socket.borrow().get_uuid() == uuid {
                 return Some(socket.clone());
             }
@@ -70,10 +70,10 @@ impl Board {
     pub fn run(&mut self, time_elapsed: Duration) {
         // TODO: find a way to update the traces accurately
         // current issue : the order of the traces affects the order of the links
-        for trc in self.traces.iter_mut() {
+        for trc in &mut self.traces {
             trc.borrow_mut().communicate();
         }
-        for skt in self.sockets.iter_mut() {
+        for skt in &mut self.sockets {
             skt.borrow_mut().run(time_elapsed);
         }
     }
@@ -102,7 +102,7 @@ impl Board {
     /// Save the board to a file in RON format
     pub fn save(&self, filepath: &str) -> std::io::Result<()> {
         let mut s_board = SavedBoard::new();
-        for socket in self.sockets.iter() {
+        for socket in &self.sockets {
             let saved_chip = socket.borrow().save();
             let mut saved_socket = SavedSocket::new();
             if saved_chip.chip_type != "NULL" {
@@ -110,7 +110,7 @@ impl Board {
             }
             s_board.add_socket(saved_socket);
         }
-        for trace in self.traces.iter() {
+        for trace in &self.traces {
             s_board.add_trace(trace.borrow().save());
         }
 
@@ -118,7 +118,7 @@ impl Board {
         if let Err(e) = ron::ser::to_writer(file, &s_board) {
             Err(std::io::Error::new(
                 std::io::ErrorKind::Interrupted,
-                format!("{:?}", e),
+                format!("{e:?}"),
             ))
         } else {
             Ok(())
@@ -136,16 +136,17 @@ impl Board {
     pub fn load(
         filepath: &str,
         chip_factory: &dyn Fn(&str) -> Option<Box<dyn Chip>>,
-    ) -> std::io::Result<Board> {
+    ) -> std::io::Result<Self> {
         let file = std::fs::File::open(std::path::Path::new(filepath))?;
         let s_board: Result<SavedBoard, ron::Error> = ron::de::from_reader(file);
-        if let Ok(s_board) = s_board {
-            Ok(s_board.build_board(chip_factory))
-        } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("{:?}", s_board.err()),
-            ))
-        }
+        s_board.map_or_else(
+            |err| {
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!("{err:?}"),
+                ))
+            },
+            |board| Ok(board.build_board(chip_factory)),
+        )
     }
 }

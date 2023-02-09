@@ -34,7 +34,7 @@ impl Button {
 
     pub fn new() -> Self {
         let uuid = uuid::Uuid::new_v4().as_u128();
-        Button {
+        Self {
             uuid,
             pin: [
                 Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Input))),
@@ -67,7 +67,7 @@ impl Chip for Button {
         ChipInfo {
             name: "Button",
             description: "A Button that open a circuit when pressed",
-            data: format!("Status: {}", if self.down {"DOWN"} else {"UP"})
+            data: format!("Status: {}", if self.down { "DOWN" } else { "UP" }),
         }
     }
 

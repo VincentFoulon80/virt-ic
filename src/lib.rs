@@ -20,9 +20,9 @@ pub enum State {
 impl From<bool> for State {
     fn from(bit: bool) -> Self {
         if bit {
-            State::High
+            Self::High
         } else {
-            State::Low
+            Self::Low
         }
     }
 }
@@ -30,38 +30,35 @@ impl State {
     pub fn from_u8(data: u8, position: usize) -> Self {
         let bit = (data >> position) & 1;
         if bit == 1 {
-            State::High
+            Self::High
         } else {
-            State::Low
+            Self::Low
         }
     }
     pub fn from_u16(data: u16, position: usize) -> Self {
         let bit = (data >> position) & 1;
         if bit == 1 {
-            State::High
+            Self::High
         } else {
-            State::Low
+            Self::Low
         }
     }
     pub fn from_u32(data: u32, position: usize) -> Self {
         let bit = (data >> position) & 1;
         if bit == 1 {
-            State::High
+            Self::High
         } else {
-            State::Low
+            Self::Low
         }
     }
 
     pub fn as_bool(&self) -> bool {
-        match self {
-            State::High => true,
-            _ => false,
-        }
+        matches!(self, Self::High)
     }
 
     pub fn as_u8(&self) -> u8 {
         match self {
-            State::High => 1,
+            Self::High => 1,
             _ => 0,
         }
     }

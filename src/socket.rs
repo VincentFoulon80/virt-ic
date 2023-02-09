@@ -9,12 +9,13 @@ pub struct Socket {
 }
 
 impl Socket {
-    pub fn new() -> Socket {
-        Socket { chip: None }
+    #[must_use]
+    pub fn new() -> Self {
+        Self { chip: None }
     }
 
-    pub fn with(chip: Box<dyn Chip>) -> Socket {
-        Socket { chip: Some(chip) }
+    pub fn with(chip: Box<dyn Chip>) -> Self {
+        Self { chip: Some(chip) }
     }
 
     pub fn plug(&mut self, chip: Box<dyn Chip>) {
@@ -30,15 +31,10 @@ impl Socket {
     }
 
     pub fn get_pin_type(&mut self, pin: u8) -> PinType {
-        if let Some(chip) = self.chip.as_mut() {
-            if let Ok(pin) = chip.get_pin(pin) {
-                pin.borrow().pin_type.clone()
-            } else {
-                PinType::Undefined
-            }
-        } else {
-            PinType::Undefined
-        }
+        self.chip.as_mut().map_or(PinType::Undefined, |chip| {
+            chip.get_pin(pin)
+                .map_or(PinType::Undefined, |pin| pin.borrow().pin_type.clone())
+        })
     }
 
     pub fn set_pin_type(&mut self, pin: u8, pin_type: &PinType) {
@@ -52,26 +48,14 @@ impl Socket {
 
 impl Chip for Socket {
     fn get_uuid(&self) -> u128 {
-        if let Some(chip) = self.chip.as_ref() {
-            chip.get_uuid()
-        } else {
-            0
-        }
+        self.chip.as_ref().map_or(0, |chip| chip.get_uuid())
     }
     fn get_type(&self) -> &str {
-        if let Some(chip) = self.chip.as_ref() {
-            chip.get_type()
-        } else {
-            "NULL"
-        }
+        self.chip.as_ref().map_or("NULL", |chip| chip.get_type())
     }
 
     fn get_pin_qty(&self) -> u8 {
-        if let Some(chip) = self.chip.as_ref() {
-            chip.get_pin_qty()
-        } else {
-            0
-        }
+        self.chip.as_ref().map_or(0, |chip| chip.get_pin_qty())
     }
 
     fn _get_pin(&mut self, _: u8) -> Rc<RefCell<Pin>> {
@@ -79,23 +63,16 @@ impl Chip for Socket {
     }
 
     fn get_pin(&mut self, pin: u8) -> Result<Rc<RefCell<Pin>>, &str> {
-        if let Some(chip) = self.chip.as_mut() {
-            chip.get_pin(pin)
-        } else {
-            Err("No chip connected")
-        }
+        self.chip
+            .as_mut()
+            .map_or(Err("No chip connected"), |chip| chip.get_pin(pin))
     }
 
     fn get_pin_state(&mut self, pin: u8) -> State {
-        if let Some(chip) = self.chip.as_mut() {
-            if let Ok(pin) = chip.get_pin(pin) {
-                pin.borrow().state.clone()
-            } else {
-                State::Undefined
-            }
-        } else {
-            State::Undefined
-        }
+        self.chip.as_mut().map_or(State::Undefined, |chip| {
+            chip.get_pin(pin)
+                .map_or(State::Undefined, |pin| pin.borrow().state.clone())
+        })
     }
 
     fn set_pin_state(&mut self, pin: u8, state: &State) {
@@ -107,32 +84,29 @@ impl Chip for Socket {
     }
 
     fn get_info(&self) -> ChipInfo {
-        if let Some(chip) = self.chip.as_ref() {
-            chip.get_info()
-        } else {
-            ChipInfo {
+        self.chip.as_ref().map_or_else(
+            || ChipInfo {
                 name: "Empty Socket",
                 description: "Socket without any chip plugged in it",
-                data: String::new()
-            }
-        }
+                data: String::new(),
+            },
+            |chip| chip.get_info(),
+        )
     }
 
     fn run(&mut self, elapsed_time: std::time::Duration) {
         if let Some(chip) = self.chip.as_mut() {
-            chip.run(elapsed_time)
+            chip.run(elapsed_time);
         }
     }
     fn save_data(&self) -> Vec<String> {
-        if let Some(chip) = self.chip.as_ref() {
-            chip.save_data()
-        } else {
-            vec![]
-        }
+        self.chip
+            .as_ref()
+            .map_or_else(std::vec::Vec::new, |chip| chip.save_data())
     }
     fn load_data(&mut self, s_chip: &[String]) {
         if let Some(chip) = self.chip.as_mut() {
-            chip.load_data(s_chip)
+            chip.load_data(s_chip);
         }
     }
 }

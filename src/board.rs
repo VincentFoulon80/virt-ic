@@ -1,87 +1,57 @@
-use super::{
-    save::{SavedBoard, SavedSocket},
-    Chip, Socket, Trace,
-};
-use std::cell::RefCell;
-use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-/// A Board that contains Traces and Sockets
-#[derive(Default, Debug)]
-pub struct Board {
-    traces: Vec<Rc<RefCell<Trace>>>,
-    sockets: Vec<Rc<RefCell<Socket>>>,
+use crate::{
+    chip::{Chip, PinId, PinType},
+    utilities::{Id, Storage},
+    State,
+};
+
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Board<C: Chip> {
+    chips: Storage<C>,
+    traces: Storage<Trace<C>>,
 }
 
-impl Board {
-    /// Create a new empty Board
+impl<C> Board<C>
+where
+    C: Chip,
+{
     pub fn new() -> Self {
-        Self {
-            traces: vec![],
-            sockets: vec![],
+        Board {
+            chips: Storage::default(),
+            traces: Storage::default(),
         }
     }
 
-    /// Create a new trace and return it
-    pub fn new_trace(&mut self) -> Rc<RefCell<Trace>> {
-        let trace = Rc::new(RefCell::new(Trace::new()));
-        self.traces.push(trace);
-        // unwrap because we just pushed a value so there's no reason to get a None here
-        self.traces.last_mut().unwrap().clone()
-    }
-
-    /// Create a new socket and return it
-    /// Note that you'll have to plug a chip on it before linking it with the traces
-    pub fn new_socket(&mut self) -> Rc<RefCell<Socket>> {
-        let socket = Rc::new(RefCell::new(Socket::new()));
-        self.sockets.push(socket);
-        // unwrap because we just pushed a value so there's no reason to get a None here
-        self.sockets.last_mut().unwrap().clone()
-    }
-
-    /// Create a new socket with a chip and return it
-    pub fn new_socket_with(&mut self, chip: Box<dyn Chip>) -> Rc<RefCell<Socket>> {
-        let socket = Rc::new(RefCell::new(Socket::new()));
-        socket.borrow_mut().plug(chip);
-        self.sockets.push(socket);
-        // unwrap because we just pushed a value so there's no reason to get a None here
-        self.sockets.last_mut().unwrap().clone()
-    }
-
-    pub fn get_sockets(&self) -> Vec<Rc<RefCell<Socket>>> {
-        self.sockets.clone()
-    }
-
-    pub fn get_traces(&self) -> Vec<Rc<RefCell<Trace>>> {
-        self.traces.clone()
-    }
-
-    pub fn get_socket(&mut self, uuid: u128) -> Option<Rc<RefCell<Socket>>> {
-        for socket in &self.sockets {
-            if socket.borrow().get_uuid() == uuid {
-                return Some(socket.clone());
+    pub fn run(&mut self, tick_duration: Duration) {
+        for (_id, chip) in self.chips.as_mut_vec() {
+            let mut pins_to_reset = vec![];
+            for (pin_id, pin) in chip.list_pins() {
+                if matches!(pin.pin_type, PinType::Input) {
+                    pins_to_reset.push(pin_id);
+                }
+            }
+            for pin_id in pins_to_reset {
+                if let Some(pin) = chip.get_pin_mut(pin_id) {
+                    pin.state = State::Undefined
+                }
             }
         }
-        None
-    }
 
-    /// Run the circuit for a certain amount of time
-    /// You must use `use_during` since it provides more accurate simulation by stepping
-    pub fn run(&mut self, time_elapsed: Duration) {
-        // TODO: find a way to update the traces accurately
-        // current issue : the order of the traces affects the order of the links
-        for trc in &mut self.traces {
-            trc.borrow_mut().communicate();
+        for (_id, trace) in self.traces.as_mut_vec() {
+            trace.calculate_state(&mut self.chips);
         }
-        for skt in &mut self.sockets {
-            skt.borrow_mut().run(time_elapsed);
+
+        for (_id, chip) in self.chips.as_mut_vec() {
+            chip.run(tick_duration);
         }
     }
 
     /// Run the circuit for a certain amount of time segmented by a step
     /// The smaller the step the more accurate the simulation will be.
     pub fn run_during(&mut self, duration: Duration, step: Duration) {
-        let mut elapsed = Duration::new(0, 0);
+        let mut elapsed = Duration::default();
         while elapsed < duration {
             self.run(step);
             elapsed += step;
@@ -99,54 +69,90 @@ impl Board {
         }
     }
 
-    /// Save the board to a file in RON format
-    pub fn save(&self, filepath: &str) -> std::io::Result<()> {
-        let mut s_board = SavedBoard::new();
-        for socket in &self.sockets {
-            let saved_chip = socket.borrow().save();
-            let mut saved_socket = SavedSocket::new();
-            if saved_chip.chip_type != "NULL" {
-                saved_socket.set_chip(saved_chip);
-            }
-            s_board.add_socket(saved_socket);
-        }
-        for trace in &self.traces {
-            s_board.add_trace(trace.borrow().save());
-        }
+    pub fn register_chip(&mut self, chip: C) -> Id<C> {
+        self.chips.add(chip)
+    }
 
-        let file = std::fs::File::create(std::path::Path::new(filepath))?;
-        if let Err(e) = ron::ser::to_writer(file, &s_board) {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::Interrupted,
-                format!("{e:?}"),
-            ))
-        } else {
-            Ok(())
+    pub fn register_trace(&mut self, trace: Trace<C>) -> Id<Trace<C>> {
+        self.traces.add(trace)
+    }
+
+    pub fn connect(
+        &mut self,
+        chip_a: Id<C>,
+        pin_a: PinId,
+        chip_b: Id<C>,
+        pin_b: PinId,
+    ) -> Id<Trace<C>> {
+        self.traces.add(Trace {
+            pins: vec![(chip_a, pin_a), (chip_b, pin_b)],
+        })
+    }
+
+    pub fn get_chip(&self, id: &Id<C>) -> &C {
+        self.chips.get(id)
+    }
+
+    pub fn get_chip_mut(&mut self, id: &Id<C>) -> &mut C {
+        self.chips.get_mut(id)
+    }
+
+    pub fn get_trace(&self, id: &Id<Trace<C>>) -> &Trace<C> {
+        self.traces.get(id)
+    }
+
+    pub fn get_trace_mut(&mut self, id: &Id<Trace<C>>) -> &mut Trace<C> {
+        self.traces.get_mut(id)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct Trace<C: Chip> {
+    pins: Vec<(Id<C>, usize)>,
+}
+
+impl<C> Trace<C>
+where
+    C: Chip,
+{
+    pub fn new() -> Self {
+        Trace { pins: Vec::new() }
+    }
+
+    pub fn connect(&mut self, chip: Id<C>, pin: PinId) {
+        if !self.pins.contains(&(chip, pin)) {
+            self.pins.push((chip, pin))
         }
     }
 
-    /// Load a file and create a board according to this file
-    /// You'll need to provide a "chip factory" function as second parameter
-    /// By default it's `virt_ic::chip::virt_ic_chip_factory`
-    /// ```
-    /// use virt_ic::chip::virt_ic_chip_factory;
-    ///
-    /// let mut board = Board::load("my_saved_board.ron", &virt_ic_chip_factory).unwrap();
-    /// ```
-    pub fn load(
-        filepath: &str,
-        chip_factory: &dyn Fn(&str) -> Option<Box<dyn Chip>>,
-    ) -> std::io::Result<Self> {
-        let file = std::fs::File::open(std::path::Path::new(filepath))?;
-        let s_board: Result<SavedBoard, ron::Error> = ron::de::from_reader(file);
-        s_board.map_or_else(
-            |err| {
-                Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    format!("{err:?}"),
-                ))
-            },
-            |board| Ok(board.build_board(chip_factory)),
-        )
+    pub fn disconnect(&mut self, chip: Id<C>, pin: PinId) {
+        self.pins.retain(|&x| x != (chip, pin));
+    }
+
+    pub fn get_connections(&self) -> &[(Id<C>, usize)] {
+        &self.pins
+    }
+
+    pub fn calculate_state(&mut self, chip_storage: &mut Storage<C>) {
+        let mut base_state = State::Undefined;
+        // read state
+        for (chip_id, pin_id) in self.pins.iter() {
+            let chip = chip_storage.get(chip_id);
+            if let Some(pin) = chip.get_pin(*pin_id) {
+                if matches!(pin.pin_type, PinType::Output) {
+                    base_state = base_state.feed_state(pin.state);
+                }
+            }
+        }
+        // write state
+        for (chip_id, pin_id) in self.pins.iter() {
+            let chip = chip_storage.get_mut(chip_id);
+            if let Some(mut pin) = chip.get_pin_mut(*pin_id) {
+                if matches!(pin.pin_type, PinType::Input) {
+                    pin.state = pin.state.feed_state(base_state);
+                }
+            }
+        }
     }
 }

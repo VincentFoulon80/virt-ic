@@ -20,11 +20,10 @@ This library is a Backend emulator, it means that there is no GUI (yet) to creat
 ## Available Built-in Chips
 
 - Generator
-- Buttons
-- Logic Gates (And, Or, Not)
-- Clocks
+- Logic Gates (And, Or, Not, Nand, Nor)
+- Button
+- Clock
 - Memory (RAM, ROM)
-- CPU (right now there is only one fictional CPU)
 
 # Contributing
 
@@ -38,70 +37,64 @@ You can :
 # example usage 
 
 ```rust
-use virt_ic::chip::gates::GateAnd;
-use virt_ic::chip::generators::Generator;
-use virt_ic::chip::Chip;
-use virt_ic::{Board,State};
 use std::time::Duration;
 
+use virt_ic::{
+    board::{Board, Trace},
+    chip::{gates::AndGate, generators::Generator, Chip, ChipBuilder, ChipType},
+};
+
 fn main() {
-    // create a board
-    let mut board = Board::new();
-    // place sockets with chips on the board
-    let gen = board.new_socket_with(Box::new(Generator::new()));
-    let and_gate = board.new_socket_with(Box::new(GateAnd::new()));
-    // place traces 
-    {
-        // VCC
-        let trc = board.new_trace();
-        trc.borrow_mut().connect(gen.borrow_mut().get_pin(Generator::VCC).unwrap());
-        trc.borrow_mut().connect(and_gate.borrow_mut().get_pin(GateAnd::VCC).unwrap());
-    }
-    {
-        // GND
-        let trc = board.new_trace();
-        trc.borrow_mut().connect(gen.borrow_mut().get_pin(Generator::GND).unwrap());
-        trc.borrow_mut().connect(and_gate.borrow_mut().get_pin(GateAnd::GND).unwrap());
-    }
-    {
-        // link pin "A&B" to pin "C"
-        let trc = board.new_trace();
-        trc.borrow_mut().connect(and_gate.borrow_mut().get_pin(GateAnd::A_AND_B).unwrap());
-        trc.borrow_mut().connect(and_gate.borrow_mut().get_pin(GateAnd::D).unwrap());
-    }
-    // run the board to update its state
-    // we simulate 1 second segmented by 100 milliseconds
-    board.run_during(Duration::from_secs(1), Duration::from_millis(100));
-    // test the chip
-    println!("ABC:\tA&B\tA&B&C");
-    let a_b = and_gate.borrow_mut().get_pin_state(GateAnd::A_AND_B).as_bool();
-    println!("000:\t{}\t{}", a_b, and_gate.borrow_mut().get_pin_state(GateAnd::C_AND_D).as_bool());
+    // create a new board
+    let mut board: Board<ChipType> = Board::new();
+    // place an AND gate to the board
+    let and_gate = board.register_chip(AndGate::build());
+    // also place a generator
+    let vcc = board.register_chip(Generator::build().into());
+    let gnd = board.register_chip(Generator::build().with_state(virt_ic::State::Low).into());
 
+    // Connect the AndGate's VCC, A and B pins with the Generator
+    let mut trace = Trace::new();
+    trace.connect(vcc, Generator::OUT);
+    trace.connect(and_gate, AndGate::VCC);
+    trace.connect(and_gate, AndGate::A);
+    trace.connect(and_gate, AndGate::B);
+    let trace_vcc = board.register_trace(trace);
 
-    // set some pins manually and test the result
-    and_gate.borrow_mut().set_pin_state(GateAnd::A, &State::High);
-    and_gate.borrow_mut().set_pin_state(GateAnd::B, &State::High);
-    and_gate.borrow_mut().set_pin_state(GateAnd::C, &State::Low);
-    board.run_during(Duration::from_secs(1), Duration::from_millis(100));
-    
-    let a_b = and_gate.borrow_mut().get_pin_state(GateAnd::A_AND_B).as_bool();
-    println!("110:\t{}\t{}", a_b, and_gate.borrow_mut().get_pin_state(GateAnd::C_AND_D).as_bool());
+    // Alternative way to connect chips via board, connect GND pins
+    let trace_gnd = board.connect(gnd, Generator::OUT, and_gate, AndGate::GND);
 
+    // simulate the board for 10ms
+    board.run(Duration::from_millis(10));
 
-    and_gate.borrow_mut().set_pin_state(GateAnd::C, &State::High);
-    board.run_during(Duration::from_secs(1), Duration::from_millis(100));
-    
-    let a_b = and_gate.borrow_mut().get_pin_state(GateAnd::A_AND_B).as_bool();
-    println!("111:\t{}\t{}", a_b, and_gate.borrow_mut().get_pin_state(GateAnd::C_AND_D).as_bool());
+    // check the results
+    let chip = board.get_chip(&and_gate);
+    println!(
+        "A={:?}, \tB={:?}, \tA&B={:?}",
+        chip.get_pin(AndGate::A).map(|p| p.state),
+        chip.get_pin(AndGate::B).map(|p| p.state),
+        chip.get_pin(AndGate::AB).map(|p| p.state)
+    );
 
+    // disconnect AndGate's pin B from VCC and connect it instead to GND
+    board
+        .get_trace_mut(&trace_vcc)
+        .disconnect(and_gate, AndGate::B);
+    board
+        .get_trace_mut(&trace_gnd)
+        .connect(and_gate, AndGate::B);
 
-    and_gate.borrow_mut().set_pin_state(GateAnd::A, &State::Low);
-    and_gate.borrow_mut().set_pin_state(GateAnd::B, &State::Low);
-    and_gate.borrow_mut().set_pin_state(GateAnd::C, &State::High);
-    board.run_during(Duration::from_secs(1), Duration::from_millis(100));
+    // simulate the board for another 10ms
+    board.run(Duration::from_millis(10));
 
-    let a_b = and_gate.borrow_mut().get_pin_state(GateAnd::A_AND_B).as_bool();
-    println!("001:\t{}\t{}", a_b, and_gate.borrow_mut().get_pin_state(GateAnd::C_AND_D).as_bool());
+    // check the results
+    let chip = board.get_chip(&and_gate);
+    println!(
+        "A={:?}, \tB={:?}, \tA&B={:?}",
+        chip.get_pin(AndGate::A).map(|p| p.state),
+        chip.get_pin(AndGate::B).map(|p| p.state),
+        chip.get_pin(AndGate::AB).map(|p| p.state)
+    );
 }
 ```
 
@@ -112,6 +105,7 @@ Take a look at the [generated documentation](https://docs.rs/virt-ic/).
 # Examples
 
 See [examples](https://github.com/VincentFoulon80/virt-ic/tree/master/examples) :
+- **pins** : Read and write a set of pins using Pin::read and Pin::write
 - **readme** : Same example as provided in this readme
-- **ram-test** : A simple test of a RAM chip
-- **cpu-test** : A simple circuit containing a minimal setup running a CPU processing factorial of 5
+- **ram** : A simple test of a RAM chip
+- **save** : Board saving and loading example

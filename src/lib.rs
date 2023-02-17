@@ -1,65 +1,77 @@
-mod board;
+pub mod board;
 pub mod chip;
-mod save;
-mod socket;
-mod trace;
-pub use board::Board;
-pub use chip::{Chip, ChipInfo, Pin, PinType};
-use serde::{Deserialize, Serialize};
-pub use socket::Socket;
-pub use trace::Trace;
+pub mod utilities;
 
-/// Current's State
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum State {
+    #[default]
     Undefined,
-    High,
     Low,
+    High,
+    Analog(f32),
+}
+
+impl State {
+    pub fn feed_state(&mut self, state: State) -> Self {
+        match state {
+            State::Low if matches!(state, State::Undefined) => State::Low,
+            State::High => State::High,
+            State::Analog(_) if matches!(state, State::High) => State::High,
+            State::Analog(v) => {
+                if let State::Analog(bv) = state {
+                    if v < bv {
+                        state
+                    } else {
+                        State::Analog(v)
+                    }
+                } else {
+                    State::Analog(v)
+                }
+            }
+            State::Undefined | State::Low => state,
+        }
+    }
+
+    pub fn as_analog(&self, conversion_target: f32) -> Self {
+        match self {
+            State::Undefined | State::Low => State::Analog(0.0),
+            State::High => Self::Analog(conversion_target),
+            State::Analog(_) => *self,
+        }
+    }
+
+    pub fn as_logic(&self, threshold: f32) -> Self {
+        match self {
+            State::Undefined => State::Low,
+            State::Low | State::High => *self,
+            State::Analog(v) => {
+                if *v >= threshold {
+                    State::High
+                } else {
+                    State::Low
+                }
+            }
+        }
+    }
+}
+
+impl From<State> for bool {
+    fn from(value: State) -> Self {
+        match value {
+            State::Undefined | State::Low => false,
+            State::High => true,
+            State::Analog(v) => v != 0.0,
+        }
+    }
 }
 
 impl From<bool> for State {
-    fn from(bit: bool) -> Self {
-        if bit {
-            Self::High
+    fn from(value: bool) -> Self {
+        if value {
+            State::High
         } else {
-            Self::Low
-        }
-    }
-}
-impl State {
-    pub fn from_u8(data: u8, position: usize) -> Self {
-        let bit = (data >> position) & 1;
-        if bit == 1 {
-            Self::High
-        } else {
-            Self::Low
-        }
-    }
-    pub fn from_u16(data: u16, position: usize) -> Self {
-        let bit = (data >> position) & 1;
-        if bit == 1 {
-            Self::High
-        } else {
-            Self::Low
-        }
-    }
-    pub fn from_u32(data: u32, position: usize) -> Self {
-        let bit = (data >> position) & 1;
-        if bit == 1 {
-            Self::High
-        } else {
-            Self::Low
-        }
-    }
-
-    pub fn as_bool(&self) -> bool {
-        matches!(self, Self::High)
-    }
-
-    pub fn as_u8(&self) -> u8 {
-        match self {
-            Self::High => 1,
-            _ => 0,
+            State::Low
         }
     }
 }

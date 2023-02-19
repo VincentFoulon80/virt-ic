@@ -108,6 +108,7 @@ where
 
 #[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
 pub struct Trace<C: Chip> {
     pins: Vec<(Id<C>, usize)>,
 }
@@ -154,5 +155,14 @@ where
                 }
             }
         }
+    }
+}
+
+impl<C> From<Vec<(Id<C>, usize)>> for Trace<C>
+where
+    C: Chip,
+{
+    fn from(pins: Vec<(Id<C>, usize)>) -> Self {
+        Trace { pins }
     }
 }

@@ -15,13 +15,13 @@ pub enum State {
 impl State {
     pub fn feed_state(&mut self, state: State) -> Self {
         match state {
-            State::Low if matches!(state, State::Undefined) => State::Low,
+            State::Low if matches!(self, State::Undefined) => State::Low,
             State::High => State::High,
-            State::Analog(_) if matches!(state, State::High) => State::High,
+            State::Analog(_) if matches!(self, State::High) => State::High,
             State::Analog(v) => {
-                if let State::Analog(bv) = state {
-                    if v < bv {
-                        state
+                if let State::Analog(bv) = self {
+                    if v < *bv {
+                        *self
                     } else {
                         State::Analog(v)
                     }
@@ -29,7 +29,7 @@ impl State {
                     State::Analog(v)
                 }
             }
-            State::Undefined | State::Low => state,
+            State::Undefined | State::Low => *self,
         }
     }
 

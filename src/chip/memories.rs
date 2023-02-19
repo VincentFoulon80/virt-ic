@@ -195,6 +195,8 @@ impl ChipRunner for Ram256B {
                         ],
                         self.ram[addr] as usize,
                     );
+                } else {
+                    self.set_io_type(PinType::Floating);
                 }
             } else {
                 self.set_io_type(PinType::Floating);
@@ -216,7 +218,19 @@ impl ToString for Ram256B {
             if addr % 16 == 0 {
                 string.push_str(&format!("\n {addr:02X}|"));
             }
-            string.push_str(&format!(" {byte:02X}"));
+            string.push_str(&format!(
+                "{}{byte:02X}",
+                if self.cs.state.as_logic(3.3) == State::Low
+                    && Pin::read(&[
+                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                        &self.a7
+                    ]) == addr
+                {
+                    ">"
+                } else {
+                    " "
+                }
+            ));
         }
         string.push('\n');
         string
@@ -305,8 +319,9 @@ impl Rom256B {
         self.io7.pin_type = pin_type;
     }
 
-    pub fn set_data(&mut self, data: [u8; 256]) {
+    pub fn set_data(mut self, data: [u8; 256]) -> Self {
         self.rom = Vec::from(data);
+        self
     }
 }
 
@@ -373,9 +388,6 @@ impl ChipRunner for Rom256B {
     fn run(&mut self, _: Duration) {
         if self.vcc.state.as_logic(1.0) == State::High {
             if !self.powered {
-                for i in 0..256 {
-                    self.rom[i] = random::<u8>();
-                }
                 self.powered = true;
             }
             self.gnd.state = State::Low;
@@ -405,6 +417,8 @@ impl ChipRunner for Rom256B {
                         ],
                         self.rom[addr] as usize,
                     );
+                } else {
+                    self.set_io_type(PinType::Floating);
                 }
             } else {
                 self.set_io_type(PinType::Floating);
@@ -426,7 +440,19 @@ impl ToString for Rom256B {
             if addr % 16 == 0 {
                 string.push_str(&format!("\n {addr:02X}|"));
             }
-            string.push_str(&format!(" {byte:02X}"));
+            string.push_str(&format!(
+                "{}{byte:02X}",
+                if self.cs.state.as_logic(3.3) == State::Low
+                    && Pin::read(&[
+                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                        &self.a7
+                    ]) > 0
+                {
+                    ">"
+                } else {
+                    " "
+                }
+            ));
         }
         string.push('\n');
         string

@@ -32,7 +32,7 @@ impl Clock {
         if hertz < f64::EPSILON {
             hertz = f64::EPSILON;
         }
-        self.frequency = Duration::from_nanos((1_000_000_000.0 * (1.0 / hertz)) as u64);
+        self.frequency = Duration::from_nanos((500_000_000.0 * (1.0 / hertz)) as u64);
         self
     }
 }

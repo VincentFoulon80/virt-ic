@@ -24,6 +24,7 @@ This library is a Backend emulator, it means that there is no GUI (yet) to creat
 - Button
 - Clock
 - Memory (RAM, ROM)
+- CPU (6502 still WIP)
 
 # Contributing
 
@@ -54,6 +55,7 @@ fn main() {
     let gnd = board.register_chip(Generator::build().with_state(virt_ic::State::Low).into());
 
     // Connect the AndGate's VCC, A and B pins with the Generator
+    // Note: Trace::from() allow an alternate way of connecting pins, using a slice of (chip_id, pin_id)
     let mut trace = Trace::new();
     trace.connect(vcc, Generator::OUT);
     trace.connect(and_gate, AndGate::VCC);
@@ -109,3 +111,4 @@ See [examples](https://github.com/VincentFoulon80/virt-ic/tree/master/examples) 
 - **readme** : Same example as provided in this readme
 - **ram** : A simple test of a RAM chip
 - **save** : Board saving and loading example
+- **test-6502** : Test the Nes6502 CPU with a small program and basic ROM and RAM layout

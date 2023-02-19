@@ -319,8 +319,9 @@ impl Rom256B {
         self.io7.pin_type = pin_type;
     }
 
-    pub fn set_data(mut self, data: [u8; 256]) -> Self {
+    pub fn set_data(mut self, data: &[u8]) -> Self {
         self.rom = Vec::from(data);
+        self.rom.resize(256, 0);
         self
     }
 }

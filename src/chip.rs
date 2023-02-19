@@ -1,4 +1,5 @@
 pub mod clocks;
+pub mod cpu;
 pub mod gates;
 pub mod generators;
 pub mod inputs;
@@ -72,6 +73,7 @@ pub enum ChipType {
     Ram256B(memories::Ram256B),
     Rom256B(memories::Rom256B),
     Button(inputs::Button),
+    Nes6502(Box<cpu::nes6502::Nes6502>),
 }
 
 impl_chip_type!(
@@ -88,7 +90,8 @@ impl_chip_type!(
     Clock,
     Ram256B,
     Rom256B,
-    Button
+    Button,
+    Nes6502
 );
 
 #[derive(Debug, Default, Clone, Copy)]

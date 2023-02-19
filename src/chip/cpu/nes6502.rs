@@ -113,7 +113,8 @@ impl ToString for Registers {
 
 /// https://www.nesdev.org/wiki/CPU_pinout
 /// Without the APU part yet
-/// Neither the NMI and interrupt handling
+/// Neither the interrupt handling and decimal mode
+/// WARNING: Not cycle accurate yet!
 ///         .--\/--.
 ///  AD1 <- |01  40| -- +5V
 ///  AD2 <- |02  39| -> OUT0

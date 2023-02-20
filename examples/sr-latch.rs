@@ -46,29 +46,29 @@ fn main() {
     board.run(Duration::from_millis(1));
 
     println!("initial state");
-    dbg!(board.get_chip(&nand).get_pin(NandGate::AB));
+    dbg!(board.get_chip(&nand).and_then(|c| c.get_pin(NandGate::AB)));
 
-    if let ChipType::Button(btn) = board.get_chip_mut(&set_btn) {
+    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&set_btn) {
         btn.press();
     }
     board.run(Duration::from_millis(1));
-    if let ChipType::Button(btn) = board.get_chip_mut(&set_btn) {
+    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&set_btn) {
         btn.release();
     }
     board.run(Duration::from_millis(1));
 
     println!("after set");
-    dbg!(board.get_chip(&nand).get_pin(NandGate::AB));
+    dbg!(board.get_chip(&nand).and_then(|c| c.get_pin(NandGate::AB)));
 
-    if let ChipType::Button(btn) = board.get_chip_mut(&reset_btn) {
+    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&reset_btn) {
         btn.press();
     }
     board.run(Duration::from_millis(1));
-    if let ChipType::Button(btn) = board.get_chip_mut(&reset_btn) {
+    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&reset_btn) {
         btn.release();
     }
     board.run(Duration::from_millis(1));
 
     println!("after reset");
-    dbg!(board.get_chip(&nand).get_pin(NandGate::AB));
+    dbg!(board.get_chip(&nand).and_then(|c| c.get_pin(NandGate::AB)));
 }

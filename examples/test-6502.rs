@@ -127,11 +127,11 @@ fn main() {
 
     board.run(Duration::from_millis(1));
 
-    if let ChipType::Rom256B(rom) = board.get_chip(&rom) {
+    if let Some(ChipType::Rom256B(rom)) = board.get_chip(&rom) {
         println!("ROM CONTENT");
         println!("{}", rom.to_string());
     }
-    if let ChipType::Ram256B(ram) = board.get_chip(&ram) {
+    if let Some(ChipType::Ram256B(ram)) = board.get_chip(&ram) {
         println!("RAM CONTENT");
         println!("{}", ram.to_string());
     }
@@ -140,12 +140,12 @@ fn main() {
     for _ in 0..160 {
         board.run_realtime(Duration::from_millis(20));
 
-        if let ChipType::Nes6502(cpu) = board.get_chip(&cpu) {
+        if let Some(ChipType::Nes6502(cpu)) = board.get_chip(&cpu) {
             println!("{}", cpu.to_string());
         }
     }
 
-    if let ChipType::Ram256B(ram) = board.get_chip(&ram) {
+    if let Some(ChipType::Ram256B(ram)) = board.get_chip(&ram) {
         println!("RAM CONTENT");
         println!("{}", ram.to_string());
     }

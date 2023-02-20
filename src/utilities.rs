@@ -40,22 +40,16 @@ where
     }
 
     // this needs invalidating every Id instance
-    pub fn remove(&mut self, id: Id<T>) -> T {
-        self.storage.remove(&id.0).unwrap()
+    pub fn remove(&mut self, id: Id<T>) -> Option<T> {
+        self.storage.remove(&id.0)
     }
 
-    pub fn is_valid(&self, id: &Id<T>) -> bool {
-        self.storage.get(&id.0).is_some()
+    pub fn get(&self, id: &Id<T>) -> Option<&T> {
+        self.storage.get(&id.0)
     }
 
-    pub fn get(&self, id: &Id<T>) -> &T {
-        // assume the id is valid
-        self.storage.get(&id.0).unwrap()
-    }
-
-    pub fn get_mut(&mut self, id: &Id<T>) -> &mut T {
-        // assume the id is valid
-        self.storage.get_mut(&id.0).unwrap()
+    pub fn get_mut(&mut self, id: &Id<T>) -> Option<&mut T> {
+        self.storage.get_mut(&id.0)
     }
 
     pub fn as_vec(&self) -> Vec<(Id<T>, &T)> {

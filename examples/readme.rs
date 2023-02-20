@@ -29,31 +29,33 @@ fn main() {
     board.run(Duration::from_millis(10));
 
     // check the results
-    let chip = board.get_chip(&and_gate);
-    println!(
-        "A={:?}, \tB={:?}, \tA&B={:?}",
-        chip.get_pin(AndGate::A).map(|p| p.state),
-        chip.get_pin(AndGate::B).map(|p| p.state),
-        chip.get_pin(AndGate::AB).map(|p| p.state)
-    );
+    if let Some(chip) = board.get_chip(&and_gate) {
+        println!(
+            "A={:?}, \tB={:?}, \tA&B={:?}",
+            chip.get_pin(AndGate::A).map(|p| p.state),
+            chip.get_pin(AndGate::B).map(|p| p.state),
+            chip.get_pin(AndGate::AB).map(|p| p.state)
+        );
+    }
 
     // disconnect AndGate's pin B from VCC and connect it instead to GND
-    board
-        .get_trace_mut(&trace_vcc)
-        .disconnect(and_gate, AndGate::B);
-    board
-        .get_trace_mut(&trace_gnd)
-        .connect(and_gate, AndGate::B);
+    if let Some(t) = board.get_trace_mut(&trace_vcc) {
+        t.disconnect(and_gate, AndGate::B)
+    }
+    if let Some(t) = board.get_trace_mut(&trace_gnd) {
+        t.connect(and_gate, AndGate::B)
+    }
 
     // simulate the board for another 10ms
     board.run(Duration::from_millis(10));
 
     // check the results
-    let chip = board.get_chip(&and_gate);
-    println!(
-        "A={:?}, \tB={:?}, \tA&B={:?}",
-        chip.get_pin(AndGate::A).map(|p| p.state),
-        chip.get_pin(AndGate::B).map(|p| p.state),
-        chip.get_pin(AndGate::AB).map(|p| p.state)
-    );
+    if let Some(chip) = board.get_chip(&and_gate) {
+        println!(
+            "A={:?}, \tB={:?}, \tA&B={:?}",
+            chip.get_pin(AndGate::A).map(|p| p.state),
+            chip.get_pin(AndGate::B).map(|p| p.state),
+            chip.get_pin(AndGate::AB).map(|p| p.state)
+        );
+    }
 }

@@ -89,19 +89,19 @@ where
         })
     }
 
-    pub fn get_chip(&self, id: &Id<C>) -> &C {
+    pub fn get_chip(&self, id: &Id<C>) -> Option<&C> {
         self.chips.get(id)
     }
 
-    pub fn get_chip_mut(&mut self, id: &Id<C>) -> &mut C {
+    pub fn get_chip_mut(&mut self, id: &Id<C>) -> Option<&mut C> {
         self.chips.get_mut(id)
     }
 
-    pub fn get_trace(&self, id: &Id<Trace<C>>) -> &Trace<C> {
+    pub fn get_trace(&self, id: &Id<Trace<C>>) -> Option<&Trace<C>> {
         self.traces.get(id)
     }
 
-    pub fn get_trace_mut(&mut self, id: &Id<Trace<C>>) -> &mut Trace<C> {
+    pub fn get_trace_mut(&mut self, id: &Id<Trace<C>>) -> Option<&mut Trace<C>> {
         self.traces.get_mut(id)
     }
 }
@@ -139,8 +139,10 @@ where
         let mut base_state = State::Undefined;
         // read state
         for (chip_id, pin_id) in self.pins.iter() {
-            let chip = chip_storage.get(chip_id);
-            if let Some(pin) = chip.get_pin(*pin_id) {
+            if let Some(pin) = chip_storage
+                .get(chip_id)
+                .and_then(|chip| chip.get_pin(*pin_id))
+            {
                 if matches!(pin.pin_type, PinType::Output) {
                     base_state = base_state.feed_state(pin.state);
                 }
@@ -148,8 +150,10 @@ where
         }
         // write state
         for (chip_id, pin_id) in self.pins.iter() {
-            let chip = chip_storage.get_mut(chip_id);
-            if let Some(mut pin) = chip.get_pin_mut(*pin_id) {
+            if let Some(mut pin) = chip_storage
+                .get_mut(chip_id)
+                .and_then(|chip| chip.get_pin_mut(*pin_id))
+            {
                 if matches!(pin.pin_type, PinType::Input) {
                     pin.state = pin.state.feed_state(base_state);
                 }

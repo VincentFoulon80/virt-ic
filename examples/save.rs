@@ -31,9 +31,9 @@ fn main() {
 
     let mut board2: Board<ChipType> = ron::de::from_str(&saved).unwrap();
 
-    board2
-        .get_trace_mut(&trace)
-        .disconnect(and_gate, AndGate::A);
+    if let Some(t) = board2.get_trace_mut(&trace) {
+        t.disconnect(and_gate, AndGate::A);
+    }
 
     board2.run(Duration::from_millis(10));
 

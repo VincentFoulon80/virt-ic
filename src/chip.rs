@@ -4,6 +4,7 @@ pub mod gates;
 pub mod generators;
 pub mod inputs;
 pub mod memories;
+pub mod outputs;
 
 use std::{fmt::Debug, time::Duration};
 
@@ -74,6 +75,8 @@ pub enum ChipType {
     Rom256B(memories::Rom256B),
     Button(inputs::Button),
     Nes6502(Box<cpu::nes6502::Nes6502>),
+    SevenSegmentDecoder(outputs::SevenSegmentsDecoder),
+    SegmentDisplay(outputs::SegmentDisplay),
 }
 
 impl_chip_type!(
@@ -91,7 +94,9 @@ impl_chip_type!(
     Ram256B,
     Rom256B,
     Button,
-    Nes6502
+    Nes6502,
+    SevenSegmentDecoder,
+    SegmentDisplay
 );
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -116,6 +121,17 @@ impl Pin {
         let mut sum = 0;
         for (i, pin) in pins.iter().enumerate() {
             if pin.state.into() {
+                sum += 1 << i;
+            }
+        }
+        sum
+    }
+
+    /// Read a given set of pins
+    pub fn read_threshold(pins: &[&Pin], input_threshold: f32) -> usize {
+        let mut sum = 0;
+        for (i, pin) in pins.iter().enumerate() {
+            if pin.state.as_logic(input_threshold).into() {
                 sum += 1 << i;
             }
         }

@@ -115,6 +115,8 @@ impl ToString for Registers {
 /// Without the APU part yet
 /// Neither the interrupt handling and decimal mode
 /// WARNING: Not cycle accurate yet!
+///
+/// ```txt
 ///         .--\/--.
 ///  AD1 <- |01  40| -- +5V
 ///  AD2 <- |02  39| -> OUT0
@@ -137,6 +139,7 @@ impl ToString for Registers {
 ///  A15 <- |19  22| <> D6
 ///  GND -- |20  21| <> D7
 ///         `------'
+/// ```
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Nes6502 {
@@ -387,9 +390,12 @@ impl Nes6502 {
     }
 
     pub fn get_data(&self) -> u8 {
-        Pin::read(&[
-            &self.d0, &self.d1, &self.d2, &self.d3, &self.d4, &self.d5, &self.d6, &self.d7,
-        ]) as u8
+        Pin::read_threshold(
+            &[
+                &self.d0, &self.d1, &self.d2, &self.d3, &self.d4, &self.d5, &self.d6, &self.d7,
+            ],
+            3.3,
+        ) as u8
     }
 }
 

@@ -67,7 +67,7 @@ fn main() {
             "0x5A => 0x{:0x}",
             Pin::read(&[
                 &ram.io0, &ram.io1, &ram.io2, &ram.io3, &ram.io4, &ram.io5, &ram.io6, &ram.io7,
-            ],)
+            ])
         );
     }
 }

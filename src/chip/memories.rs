@@ -165,23 +165,32 @@ impl ChipRunner for Ram256B {
                     // IO = Input
                     self.set_io_type(PinType::Input);
                     // read data on IO pins
-                    let addr = Pin::read(&[
-                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
-                        &self.a7,
-                    ]);
-                    self.ram[addr] = Pin::read(&[
-                        &self.io0, &self.io1, &self.io2, &self.io3, &self.io4, &self.io5,
-                        &self.io6, &self.io7,
-                    ]) as u8;
+                    let addr = Pin::read_threshold(
+                        &[
+                            &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                            &self.a7,
+                        ],
+                        3.3,
+                    );
+                    self.ram[addr] = Pin::read_threshold(
+                        &[
+                            &self.io0, &self.io1, &self.io2, &self.io3, &self.io4, &self.io5,
+                            &self.io6, &self.io7,
+                        ],
+                        3.3,
+                    ) as u8;
                 } else if self.oe.state == State::Low {
                     // IO = Output
                     self.set_io_type(PinType::Output);
 
                     // display data on IO pins
-                    let addr = Pin::read(&[
-                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
-                        &self.a7,
-                    ]);
+                    let addr = Pin::read_threshold(
+                        &[
+                            &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                            &self.a7,
+                        ],
+                        3.3,
+                    );
                     Pin::write(
                         &mut [
                             &mut self.io0,
@@ -221,10 +230,13 @@ impl ToString for Ram256B {
             string.push_str(&format!(
                 "{}{byte:02X}",
                 if self.cs.state.as_logic(3.3) == State::Low
-                    && Pin::read(&[
-                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
-                        &self.a7
-                    ]) == addr
+                    && Pin::read_threshold(
+                        &[
+                            &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                            &self.a7
+                        ],
+                        3.3
+                    ) == addr
                 {
                     ">"
                 } else {
@@ -401,10 +413,13 @@ impl ChipRunner for Rom256B {
                     self.set_io_type(PinType::Output);
 
                     // display data on IO pins
-                    let addr = Pin::read(&[
-                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
-                        &self.a7,
-                    ]);
+                    let addr = Pin::read_threshold(
+                        &[
+                            &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                            &self.a7,
+                        ],
+                        3.3,
+                    );
                     Pin::write(
                         &mut [
                             &mut self.io0,
@@ -444,10 +459,13 @@ impl ToString for Rom256B {
             string.push_str(&format!(
                 "{}{byte:02X}",
                 if self.cs.state.as_logic(3.3) == State::Low
-                    && Pin::read(&[
-                        &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
-                        &self.a7
-                    ]) > 0
+                    && Pin::read_threshold(
+                        &[
+                            &self.a0, &self.a1, &self.a2, &self.a3, &self.a4, &self.a5, &self.a6,
+                            &self.a7
+                        ],
+                        3.3
+                    ) > 0
                 {
                     ">"
                 } else {

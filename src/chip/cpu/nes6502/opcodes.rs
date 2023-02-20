@@ -49,7 +49,7 @@ impl AddressingMode {
             | AddressingMode::Indirect(a)
             | AddressingMode::AbsoluteIndexedX(a)
             | AddressingMode::AbsoluteIndexedY(a) => {
-                *a = (arg as u16) << 8;
+                *a = arg as u16;
             }
             AddressingMode::Implicit => {}
         }
@@ -60,7 +60,7 @@ impl AddressingMode {
             | AddressingMode::Indirect(a)
             | AddressingMode::AbsoluteIndexedX(a)
             | AddressingMode::AbsoluteIndexedY(a) => {
-                *a += arg as u16;
+                *a += (arg as u16) << 8;
             }
             _ => {}
         }

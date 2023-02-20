@@ -5,7 +5,7 @@ use crate::{
     generate_chip, State,
 };
 
-/// # A chip with 4 bundled "OR" gates
+/// # A chip with 4 bundled "NOR" gates
 ///
 /// # Diagram
 /// ```

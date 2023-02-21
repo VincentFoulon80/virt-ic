@@ -67,7 +67,7 @@ fn main() {
         (cpu, Nes6502::VCC),
         (not, NotGate::VCC),
         (rom, Rom256B::VCC),
-        (ram, Rom256B::VCC),
+        (ram, Ram256B::VCC),
     ]));
 
     // connect address and data lines to ROM

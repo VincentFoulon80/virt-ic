@@ -736,6 +736,7 @@ impl ChipRunner for Nes6502 {
                                                 step += 1;
                                             } else if step == 1 {
                                                 let data = self.get_data().wrapping_sub(1);
+                                                self.set_flags_nz(data);
                                                 self.set_data(data);
                                                 self.set_data_type(PinType::Output);
                                                 step += 1;
@@ -750,6 +751,7 @@ impl ChipRunner for Nes6502 {
                                                 step += 1;
                                             } else if step == 1 {
                                                 let data = self.get_data().wrapping_sub(1);
+                                                self.set_flags_nz(data);
                                                 self.set_data(data);
                                                 self.set_data_type(PinType::Output);
                                                 step += 1;
@@ -809,6 +811,7 @@ impl ChipRunner for Nes6502 {
                                                 step += 1;
                                             } else if step == 1 {
                                                 let data = self.get_data().wrapping_add(1);
+                                                self.set_flags_nz(data);
                                                 self.set_data(data);
                                                 self.set_data_type(PinType::Output);
                                                 step += 1;
@@ -823,6 +826,7 @@ impl ChipRunner for Nes6502 {
                                                 step += 1;
                                             } else if step == 1 {
                                                 let data = self.get_data().wrapping_add(1);
+                                                self.set_flags_nz(data);
                                                 self.set_data(data);
                                                 self.set_data_type(PinType::Output);
                                                 step += 1;

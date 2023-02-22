@@ -2,9 +2,15 @@ use std::time::Duration;
 
 use rand::random;
 
-use crate::{generate_chip, State};
+use crate::{generate_chip, impl_listener, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinType};
+use super::{ChipBuilder, ChipRunner, ChipType, ListenerStorage, Pin, PinType};
+
+#[derive(Debug, Clone, Copy)]
+pub enum MemoryEvent {
+    WriteByte { addr: usize, byte: u8 },
+    ReadByte { addr: usize, byte: u8 },
+}
 
 /// # A 256-bytes RAM chip
 ///
@@ -33,6 +39,8 @@ use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinType};
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ram256B {
     powered: bool,
+    #[serde(skip)]
+    listeners: ListenerStorage<Self, MemoryEvent>,
     ram: Vec<u8>,
     pub vcc: Pin,
     pub gnd: Pin,
@@ -117,10 +125,13 @@ generate_chip!(
     gnd: Ram256B::GND
 );
 
+impl_listener!(Ram256B: listeners, MemoryEvent);
+
 impl ChipBuilder<ChipType> for Ram256B {
     fn build() -> ChipType {
         ChipType::Ram256B(Ram256B {
             powered: false,
+            listeners: ListenerStorage::default(),
             ram: Vec::from([0; 256]),
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
@@ -172,13 +183,15 @@ impl ChipRunner for Ram256B {
                         ],
                         3.3,
                     );
-                    self.ram[addr] = Pin::read_threshold(
+                    let byte = Pin::read_threshold(
                         &[
                             &self.io0, &self.io1, &self.io2, &self.io3, &self.io4, &self.io5,
                             &self.io6, &self.io7,
                         ],
                         3.3,
                     ) as u8;
+                    self.ram[addr] = byte;
+                    self.trigger_event(MemoryEvent::WriteByte { addr, byte })
                 } else if self.oe.state == State::Low {
                     // IO = Output
                     self.set_io_type(PinType::Output);
@@ -204,6 +217,10 @@ impl ChipRunner for Ram256B {
                         ],
                         self.ram[addr] as usize,
                     );
+                    self.trigger_event(MemoryEvent::ReadByte {
+                        addr,
+                        byte: self.ram[addr],
+                    })
                 } else {
                     self.set_io_type(PinType::Floating);
                 }
@@ -277,6 +294,8 @@ impl ToString for Ram256B {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ram8KB {
     powered: bool,
+    #[serde(skip)]
+    listeners: ListenerStorage<Self, MemoryEvent>,
     ram: Vec<u8>,
     pub vcc: Pin,
     pub gnd: Pin,
@@ -376,10 +395,13 @@ generate_chip!(
     gnd: Ram8KB::GND
 );
 
+impl_listener!(Ram8KB: listeners, MemoryEvent);
+
 impl ChipBuilder<ChipType> for Ram8KB {
     fn build() -> ChipType {
         ChipType::Ram8KB(Ram8KB {
             powered: false,
+            listeners: ListenerStorage::default(),
             ram: Vec::from([0; 8192]),
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
@@ -436,13 +458,15 @@ impl ChipRunner for Ram8KB {
                         ],
                         3.3,
                     );
-                    self.ram[addr] = Pin::read_threshold(
+                    let byte = Pin::read_threshold(
                         &[
                             &self.io0, &self.io1, &self.io2, &self.io3, &self.io4, &self.io5,
                             &self.io6, &self.io7,
                         ],
                         3.3,
                     ) as u8;
+                    self.ram[addr] = byte;
+                    self.trigger_event(MemoryEvent::WriteByte { addr, byte });
                 } else if self.oe.state == State::Low {
                     // IO = Output
                     self.set_io_type(PinType::Output);
@@ -468,6 +492,10 @@ impl ChipRunner for Ram8KB {
                         ],
                         self.ram[addr] as usize,
                     );
+                    self.trigger_event(MemoryEvent::ReadByte {
+                        addr,
+                        byte: self.ram[addr],
+                    })
                 } else {
                     self.set_io_type(PinType::Floating);
                 }
@@ -538,6 +566,8 @@ impl ToString for Ram8KB {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rom256B {
     powered: bool,
+    #[serde(skip)]
+    listeners: ListenerStorage<Self, MemoryEvent>,
     rom: Vec<u8>,
     pub vcc: Pin,
     pub gnd: Pin,
@@ -625,10 +655,13 @@ generate_chip!(
     gnd: Rom256B::GND
 );
 
+impl_listener!(Rom256B: listeners, MemoryEvent);
+
 impl ChipBuilder<Rom256B> for Rom256B {
     fn build() -> Rom256B {
         Rom256B {
             powered: false,
+            listeners: ListenerStorage::default(),
             rom: Vec::from([0; 256]),
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
@@ -696,6 +729,10 @@ impl ChipRunner for Rom256B {
                         ],
                         self.rom[addr] as usize,
                     );
+                    self.trigger_event(MemoryEvent::ReadByte {
+                        addr,
+                        byte: self.rom[addr],
+                    })
                 } else {
                     self.set_io_type(PinType::Floating);
                 }
@@ -769,6 +806,8 @@ impl ToString for Rom256B {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Rom8KB {
     powered: bool,
+    #[serde(skip)]
+    listeners: ListenerStorage<Self, MemoryEvent>,
     rom: Vec<u8>,
     pub vcc: Pin,
     pub gnd: Pin,
@@ -871,10 +910,13 @@ generate_chip!(
     gnd: Rom8KB::GND
 );
 
+impl_listener!(Rom8KB: listeners, MemoryEvent);
+
 impl ChipBuilder<Rom8KB> for Rom8KB {
     fn build() -> Rom8KB {
         Rom8KB {
             powered: false,
+            listeners: ListenerStorage::default(),
             rom: Vec::from([0; 8192]),
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
@@ -947,6 +989,10 @@ impl ChipRunner for Rom8KB {
                         ],
                         self.rom[addr] as usize,
                     );
+                    self.trigger_event(MemoryEvent::ReadByte {
+                        addr,
+                        byte: self.rom[addr],
+                    });
                 } else {
                     self.set_io_type(PinType::Floating);
                 }

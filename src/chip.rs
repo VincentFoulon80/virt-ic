@@ -8,7 +8,9 @@ pub mod outputs;
 
 use std::{fmt::Debug, time::Duration};
 
-use crate::State;
+use debug_ignore::DebugIgnore;
+
+use crate::{utilities::Storage, State};
 
 pub type PinId = usize;
 
@@ -18,6 +20,45 @@ pub trait ChipBuilder<C: Chip> {
 
 pub trait ChipRunner {
     fn run(&mut self, tick_duration: Duration);
+}
+
+pub trait ChipListener {
+    type ChipEvent;
+    type ListenerId;
+
+    /// Add a listener to the chip, that'll be triggered when a ChipEvent occurs
+    /// Returns an identifier that can be used for the remove_listener function
+    fn add_listener(&mut self, listener: fn(&Self, Self::ChipEvent)) -> Self::ListenerId;
+
+    /// Remove a listener from the chip, given its ListenerId
+    fn remove_listener(&mut self, id: Self::ListenerId);
+}
+pub type ListenerStorage<T, E> = DebugIgnore<Storage<fn(&T, E)>>;
+
+#[macro_export]
+macro_rules! impl_listener {
+    ( $name:ident: $field:ident, $event_type:ty ) => {
+        impl $crate::chip::ChipListener for $name {
+            type ChipEvent = $event_type;
+
+            type ListenerId = $crate::utilities::Id<fn(&Self, Self::ChipEvent)>;
+
+            fn add_listener(&mut self, listener: fn(&Self, Self::ChipEvent)) -> Self::ListenerId {
+                self.$field.add(listener)
+            }
+
+            fn remove_listener(&mut self, id: Self::ListenerId) {
+                self.$field.remove(id);
+            }
+        }
+        impl $name {
+            fn trigger_event(&self, event: $event_type) {
+                for (_, listener) in self.$field.as_vec() {
+                    listener(self, event);
+                }
+            }
+        }
+    };
 }
 
 pub trait Chip: Debug + Clone + ChipRunner {

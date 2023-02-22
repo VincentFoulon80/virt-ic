@@ -1,8 +1,13 @@
 use std::time::Duration;
 
-use crate::{generate_chip, State};
+use crate::{generate_chip, impl_listener, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType};
+use super::{ChipBuilder, ChipRunner, ChipType, ListenerStorage, Pin, PinId, PinType};
+
+#[derive(Debug, Clone, Copy)]
+pub enum ClockEvent {
+    Tick { state: State },
+}
 
 /// A customizable simple clock
 /// CLK: clock
@@ -18,6 +23,8 @@ pub struct Clock {
     frequency: Duration,
     timer: Duration,
     active: bool,
+    #[serde(skip)]
+    listeners: ListenerStorage<Self, ClockEvent>,
     pub vcc: Pin,
     pub gnd: Pin,
     pub clk: Pin,
@@ -41,6 +48,7 @@ impl ChipBuilder<Clock> for Clock {
     fn build() -> Clock {
         Clock {
             frequency: Duration::from_secs(1),
+            listeners: ListenerStorage::default(),
             timer: Duration::default(),
             active: false,
             vcc: Pin::from(PinType::Input),
@@ -58,6 +66,8 @@ impl From<Clock> for ChipType {
 
 generate_chip!(Clock, vcc: Clock::VCC, gnd: Clock::GND, clk: Clock::CLK);
 
+impl_listener!(Clock: listeners, ClockEvent);
+
 impl ChipRunner for Clock {
     fn run(&mut self, tick_duration: Duration) {
         if self.vcc.state.as_logic(1.0) == State::High {
@@ -67,6 +77,9 @@ impl ChipRunner for Clock {
                 self.active = !self.active;
             }
             self.clk.state = State::from(self.active);
+            self.trigger_event(ClockEvent::Tick {
+                state: self.clk.state,
+            });
         } else {
             self.active = false;
             self.timer = Duration::default();

@@ -5,8 +5,8 @@ pub use assembler::Assembler;
 pub use opcodes::{AddressingMode, Opcode};
 
 use crate::{
-    chip::{ChipBuilder, ChipRunner, ChipType, Pin, PinType},
-    generate_chip, State,
+    chip::{ChipBuilder, ChipRunner, ChipType, ListenerStorage, Pin, PinType},
+    generate_chip, impl_listener, State,
 };
 
 use bitflags::bitflags;
@@ -111,6 +111,11 @@ impl ToString for Registers {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum CpuEvent {
+    Execute { opcode: Opcode },
+}
+
 /// https://www.nesdev.org/wiki/CPU_pinout
 /// Without the APU part yet
 /// Neither the interrupt handling and decimal mode
@@ -148,6 +153,8 @@ pub struct Nes6502 {
     state: CpuState,
     registers: Registers,
     buffer: u16,
+    #[serde(skip)]
+    listeners: ListenerStorage<Self, CpuEvent>,
     pub vcc: Pin,
     pub gnd: Pin,
     pub rst: Pin,
@@ -280,6 +287,8 @@ generate_chip!(
     d7: Nes6502::D7
 );
 
+impl_listener!(Nes6502: listeners, CpuEvent);
+
 impl ChipBuilder<ChipType> for Nes6502 {
     fn build() -> ChipType {
         ChipType::Nes6502(Box::new(Nes6502 {
@@ -288,6 +297,7 @@ impl ChipBuilder<ChipType> for Nes6502 {
             state: CpuState::Reset,
             registers: Registers::default(),
             buffer: 0,
+            listeners: ListenerStorage::default(),
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             rst: Pin::from(PinType::Input),
@@ -483,6 +493,7 @@ impl ChipRunner for Nes6502 {
                             self.state = CpuState::Execute(opcode, 0);
                         }
                         CpuState::Execute(mut opcode, mut step) => {
+                            self.trigger_event(CpuEvent::Execute { opcode });
                             if opcode.need_compute() {
                                 opcode.compute(self, step);
                                 if !opcode.need_compute() {

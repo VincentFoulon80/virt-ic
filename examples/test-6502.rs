@@ -8,7 +8,7 @@ use virt_ic::{
         gates::NotGate,
         generators::Generator,
         memories::{Ram256B, Rom256B},
-        ChipBuilder, ChipType,
+        ChipBuilder, ChipListener, ChipType,
     },
 };
 
@@ -60,6 +60,14 @@ fn main() {
     let clock = board.register_chip(Clock::build().with_frequency(50.0).into());
 
     let cpu = board.register_chip(Nes6502::build());
+
+    if let Some(ChipType::Nes6502(cpu)) = board.get_chip_mut(&cpu) {
+        cpu.add_listener(|cpu, evt| {
+            if matches!(evt, nes6502::CpuEvent::Execute { opcode: _ }) {
+                println!("{}", cpu.to_string())
+            }
+        });
+    }
 
     board.register_trace(Trace::from(vec![
         (vcc, Generator::OUT),
@@ -139,10 +147,6 @@ fn main() {
     // run the simulation at 50Hz for 3.2 seconds
     for _ in 0..160 {
         board.run_realtime(Duration::from_millis(20));
-
-        if let Some(ChipType::Nes6502(cpu)) = board.get_chip(&cpu) {
-            println!("{}", cpu.to_string());
-        }
     }
 
     if let Some(ChipType::Ram256B(ram)) = board.get_chip(&ram) {

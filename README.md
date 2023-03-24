@@ -13,7 +13,7 @@ This library is a Backend emulator, it means that there is no GUI (yet) to creat
 
 # Note on 0.5.0 update
 
-The entire engine has been rewritten from scratch in order to ease the use of this crate, remove all those `Rc<RefCell>` that were degrading the readability of your code. Thus, virt-ic up before 0.5.0 is **completely incompatible** with newer versions.
+The entire library has been rewritten from scratch in order to ease the use of this crate, remove all those `Rc<RefCell>` that were degrading the readability of your code. Thus, virt-ic up before 0.5.0 is **completely incompatible** with newer versions.
 
 # Features
 

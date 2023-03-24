@@ -26,31 +26,32 @@ pub trait Chip: Debug + Clone + ChipRunner {
     fn get_pin_mut(&mut self, pin: PinId) -> Option<&mut Pin>;
 }
 
+#[macro_export]
 macro_rules! impl_chip_type {
-    ($($variant:ident),*) => {
-        impl Chip for ChipType {
-            fn list_pins(&self) -> Vec<(PinId, &Pin)> {
+    ( $type:ident: ($($variant:ident),*)) => {
+        impl $crate::chip::Chip for $type {
+            fn list_pins(&self) -> ::std::vec::Vec<($crate::chip::PinId, &$crate::chip::Pin)> {
                 match self {
-                    $(ChipType::$variant(chip) => chip.list_pins()),*
+                    $($type::$variant(chip) => chip.list_pins()),*
                 }
             }
 
-            fn get_pin(&self, pin: PinId) -> Option<&Pin> {
+            fn get_pin(&self, pin: $crate::chip::PinId) -> ::std::option::Option<&$crate::chip::Pin> {
                 match self {
-                    $(ChipType::$variant(chip) => chip.get_pin(pin)),*
+                    $($type::$variant(chip) => chip.get_pin(pin)),*
                 }
             }
 
-            fn get_pin_mut(&mut self, pin: PinId) -> Option<&mut Pin> {
+            fn get_pin_mut(&mut self, pin: $crate::chip::PinId) -> ::std::option::Option<&mut $crate::chip::Pin> {
                 match self {
-                    $(ChipType::$variant(chip) => chip.get_pin_mut(pin)),*
+                    $($type::$variant(chip) => chip.get_pin_mut(pin)),*
                 }
             }
         }
-        impl ChipRunner for ChipType {
-            fn run(&mut self, tick_duration: Duration) {
+        impl $crate::chip::ChipRunner for $type {
+            fn run(&mut self, tick_duration: ::std::time::Duration) {
                 match self {
-                    $(ChipType::$variant(chip) => chip.run(tick_duration)),*
+                    $($type::$variant(chip) => chip.run(tick_duration)),*
                 }
             }
         }
@@ -59,7 +60,7 @@ macro_rules! impl_chip_type {
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum ChipType {
+pub enum ChipSet {
     AndGate(gates::AndGate),
     ThreeInputAndGate(gates::ThreeInputAndGate),
     NandGate(gates::NandGate),
@@ -81,26 +82,32 @@ pub enum ChipType {
     SegmentDisplay(outputs::SegmentDisplay),
 }
 
+#[deprecated(since = "0.5.1", note = "Please use `ChipSet` instead")]
+pub type ChipType = ChipSet;
+
 impl_chip_type!(
-    AndGate,
-    ThreeInputAndGate,
-    NandGate,
-    ThreeInputNandGate,
-    OrGate,
-    ThreeInputOrGate,
-    NorGate,
-    ThreeInputNorGate,
-    NotGate,
-    Generator,
-    Clock,
-    Ram256B,
-    Ram8KB,
-    Rom256B,
-    Rom8KB,
-    Button,
-    Nes6502,
-    SevenSegmentDecoder,
-    SegmentDisplay
+    ChipSet:
+        (
+            AndGate,
+            ThreeInputAndGate,
+            NandGate,
+            ThreeInputNandGate,
+            OrGate,
+            ThreeInputOrGate,
+            NorGate,
+            ThreeInputNorGate,
+            NotGate,
+            Generator,
+            Clock,
+            Ram256B,
+            Ram8KB,
+            Rom256B,
+            Rom8KB,
+            Button,
+            Nes6502,
+            SevenSegmentDecoder,
+            SegmentDisplay
+        )
 );
 
 #[derive(Debug, Default, Clone, Copy)]

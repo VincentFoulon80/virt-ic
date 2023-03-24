@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::{generate_chip, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType};
+use super::{ChipBuilder, ChipRunner, ChipSet, Pin, PinId, PinType};
 
 /// A customizable simple clock
 /// CLK: clock
@@ -50,9 +50,9 @@ impl ChipBuilder<Clock> for Clock {
     }
 }
 
-impl From<Clock> for ChipType {
+impl From<Clock> for ChipSet {
     fn from(value: Clock) -> Self {
-        ChipType::Clock(value)
+        ChipSet::Clock(value)
     }
 }
 

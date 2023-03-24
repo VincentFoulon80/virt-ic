@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    chip::{ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType},
+    chip::{ChipBuilder, ChipRunner, ChipSet, Pin, PinId, PinType},
     generate_chip, State,
 };
 
@@ -55,9 +55,9 @@ impl OrGate {
     pub const GH: PinId = 8;
 }
 
-impl ChipBuilder<ChipType> for OrGate {
-    fn build() -> ChipType {
-        ChipType::OrGate(OrGate {
+impl ChipBuilder<ChipSet> for OrGate {
+    fn build() -> ChipSet {
+        ChipSet::OrGate(OrGate {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             a: Pin::from(PinType::Input),
@@ -160,9 +160,9 @@ impl ThreeInputOrGate {
     pub const GHI: PinId = 8;
 }
 
-impl ChipBuilder<ChipType> for ThreeInputOrGate {
-    fn build() -> ChipType {
-        ChipType::ThreeInputOrGate(ThreeInputOrGate {
+impl ChipBuilder<ChipSet> for ThreeInputOrGate {
+    fn build() -> ChipSet {
+        ChipSet::ThreeInputOrGate(ThreeInputOrGate {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             a: Pin::from(PinType::Input),

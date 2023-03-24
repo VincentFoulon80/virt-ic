@@ -12,7 +12,7 @@ pub use or::*;
 
 use crate::{generate_chip, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType};
+use super::{ChipBuilder, ChipRunner, ChipSet, Pin, PinId, PinType};
 
 /// # A chip with 6 bundled "NOT" gates
 ///
@@ -62,9 +62,9 @@ impl NotGate {
     pub const F: PinId = 9;
     pub const NOT_F: PinId = 8;
 }
-impl ChipBuilder<ChipType> for NotGate {
-    fn build() -> ChipType {
-        ChipType::NotGate(NotGate {
+impl ChipBuilder<ChipSet> for NotGate {
+    fn build() -> ChipSet {
+        ChipSet::NotGate(NotGate {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             a: Pin::from(PinType::Input),

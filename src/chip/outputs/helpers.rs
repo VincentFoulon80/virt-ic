@@ -1,5 +1,5 @@
 use crate::{
-    chip::{ChipBuilder, ChipRunner, ChipType, Pin, PinType},
+    chip::{ChipBuilder, ChipRunner, ChipSet, Pin, PinType},
     generate_chip, State,
 };
 
@@ -75,9 +75,9 @@ generate_chip!(
     og: SevenSegmentsDecoder::OG
 );
 
-impl ChipBuilder<ChipType> for SevenSegmentsDecoder {
-    fn build() -> ChipType {
-        ChipType::SevenSegmentDecoder(SevenSegmentsDecoder {
+impl ChipBuilder<ChipSet> for SevenSegmentsDecoder {
+    fn build() -> ChipSet {
+        ChipSet::SevenSegmentDecoder(SevenSegmentsDecoder {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             bi: Pin::from(PinType::Input),

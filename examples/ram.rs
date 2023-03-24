@@ -1,12 +1,12 @@
 use std::time::Duration;
 
 use virt_ic::{
-    chip::{memories::Ram256B, ChipBuilder, ChipRunner, ChipType, Pin},
+    chip::{memories::Ram256B, ChipBuilder, ChipRunner, ChipSet, Pin},
     State,
 };
 
 fn main() {
-    if let ChipType::Ram256B(mut ram) = Ram256B::build() {
+    if let ChipSet::Ram256B(mut ram) = Ram256B::build() {
         ram.vcc.state = State::High;
 
         ram.run(Duration::from_millis(10));

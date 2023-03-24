@@ -6,12 +6,12 @@ use virt_ic::{
         generators::Generator,
         inputs::Button,
         outputs::{SegmentDisplay, SevenSegmentsDecoder},
-        ChipBuilder, ChipType,
+        ChipBuilder, ChipSet,
     },
 };
 
 fn main() {
-    let mut board: Board<ChipType> = Board::new();
+    let mut board: Board<ChipSet> = Board::new();
 
     let seg_dec = board.register_chip(SevenSegmentsDecoder::build());
 
@@ -85,55 +85,55 @@ fn main() {
 
     board.run_realtime(Duration::from_millis(100));
 
-    if let Some(ChipType::SegmentDisplay(display)) = board.get_chip(&display) {
+    if let Some(ChipSet::SegmentDisplay(display)) = board.get_chip(&display) {
         println!("{}:\n{}", display.as_char(), display.to_string());
     }
 
-    if let Some(ChipType::Button(a)) = board.get_chip_mut(&btn_a) {
+    if let Some(ChipSet::Button(a)) = board.get_chip_mut(&btn_a) {
         a.press();
     }
 
     board.run_realtime(Duration::from_millis(100));
 
-    if let Some(ChipType::SegmentDisplay(display)) = board.get_chip(&display) {
+    if let Some(ChipSet::SegmentDisplay(display)) = board.get_chip(&display) {
         println!("{}:\n{}", display.as_char(), display.to_string());
     }
 
-    if let Some(ChipType::Button(a)) = board.get_chip_mut(&btn_a) {
+    if let Some(ChipSet::Button(a)) = board.get_chip_mut(&btn_a) {
         a.release();
     }
-    if let Some(ChipType::Button(b)) = board.get_chip_mut(&btn_b) {
+    if let Some(ChipSet::Button(b)) = board.get_chip_mut(&btn_b) {
         b.press();
     }
 
     board.run_realtime(Duration::from_millis(100));
 
-    if let Some(ChipType::SegmentDisplay(display)) = board.get_chip(&display) {
+    if let Some(ChipSet::SegmentDisplay(display)) = board.get_chip(&display) {
         println!("{}:\n{}", display.as_char(), display.to_string());
     }
-    if let Some(ChipType::Button(b)) = board.get_chip_mut(&btn_b) {
+    if let Some(ChipSet::Button(b)) = board.get_chip_mut(&btn_b) {
         b.release();
     }
-    if let Some(ChipType::Button(c)) = board.get_chip_mut(&btn_c) {
+    if let Some(ChipSet::Button(c)) = board.get_chip_mut(&btn_c) {
         c.press();
     }
 
     board.run_realtime(Duration::from_millis(100));
 
-    if let Some(ChipType::SegmentDisplay(display)) = board.get_chip(&display) {
+    if let Some(ChipSet::SegmentDisplay(display)) = board.get_chip(&display) {
         println!("{}:\n{}", display.as_char(), display.to_string());
     }
 
-    if let Some(ChipType::Button(c)) = board.get_chip_mut(&btn_c) {
+    if let Some(ChipSet::Button(c)) = board.get_chip_mut(&btn_c) {
         c.release();
     }
-    if let Some(ChipType::Button(d)) = board.get_chip_mut(&btn_d) {
+    if let Some(ChipSet::Button(d)) = board.get_chip_mut(&btn_d) {
         d.press();
     }
 
     board.run_realtime(Duration::from_millis(100));
 
-    if let Some(ChipType::SegmentDisplay(display)) = board.get_chip(&display) {
+    if let Some(ChipSet::SegmentDisplay(display)) = board.get_chip(&display) {
         println!("{}:\n{}", display.as_char(), display.to_string());
     }
 }

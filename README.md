@@ -113,6 +113,7 @@ Take a look at the [generated documentation](https://docs.rs/virt-ic/).
 # Examples
 
 See [examples](https://github.com/VincentFoulon80/virt-ic/tree/master/examples) :
+- **extend** : An example of how to add custom chips, by extending the built-in chipset
 - **pins** : Read and write a set of pins using Pin::read and Pin::write
 - **ram** : A simple test of a RAM chip
 - **readme** : Same example as provided in this readme

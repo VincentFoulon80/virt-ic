@@ -8,7 +8,7 @@ use virt_ic::{
         gates::NotGate,
         generators::Generator,
         memories::{Ram256B, Rom256B},
-        ChipBuilder, ChipType,
+        ChipBuilder, ChipSet,
     },
 };
 
@@ -26,7 +26,7 @@ use virt_ic::{
 /// This example will show the content of ROM, RAM then run the CPU for a certain amount of time,
 /// and finally show the content of RAM after the simulation has ended.
 fn main() {
-    let mut board: Board<ChipType> = Board::new();
+    let mut board: Board<ChipSet> = Board::new();
 
     // assemble a 6502 program
     let mut prg = nes6502::Assembler::assemble(&[
@@ -127,11 +127,11 @@ fn main() {
 
     board.run(Duration::from_millis(1));
 
-    if let Some(ChipType::Rom256B(rom)) = board.get_chip(&rom) {
+    if let Some(ChipSet::Rom256B(rom)) = board.get_chip(&rom) {
         println!("ROM CONTENT");
         println!("{}", rom.to_string());
     }
-    if let Some(ChipType::Ram256B(ram)) = board.get_chip(&ram) {
+    if let Some(ChipSet::Ram256B(ram)) = board.get_chip(&ram) {
         println!("RAM CONTENT");
         println!("{}", ram.to_string());
     }
@@ -140,12 +140,12 @@ fn main() {
     for _ in 0..160 {
         board.run_realtime(Duration::from_millis(20));
 
-        if let Some(ChipType::Nes6502(cpu)) = board.get_chip(&cpu) {
+        if let Some(ChipSet::Nes6502(cpu)) = board.get_chip(&cpu) {
             println!("{}", cpu.to_string());
         }
     }
 
-    if let Some(ChipType::Ram256B(ram)) = board.get_chip(&ram) {
+    if let Some(ChipSet::Ram256B(ram)) = board.get_chip(&ram) {
         println!("RAM CONTENT");
         println!("{}", ram.to_string());
     }

@@ -1,6 +1,6 @@
 use crate::{generate_chip, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinType};
+use super::{ChipBuilder, ChipRunner, ChipSet, Pin, PinType};
 
 /// # A simple button
 /// Transmit the IN signal in the OUT pin when he is down
@@ -35,9 +35,9 @@ impl Button {
 
 generate_chip!(Button, i: Button::I, o: Button::O);
 
-impl ChipBuilder<ChipType> for Button {
-    fn build() -> ChipType {
-        ChipType::Button(Button {
+impl ChipBuilder<ChipSet> for Button {
+    fn build() -> ChipSet {
+        ChipSet::Button(Button {
             down: false,
             i: Pin::from(PinType::Input),
             o: Pin::from(PinType::Output),

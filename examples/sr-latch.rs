@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use virt_ic::{
     board::{Board, Trace},
-    chip::{gates::NandGate, generators::Generator, inputs::Button, Chip, ChipBuilder, ChipType},
+    chip::{gates::NandGate, generators::Generator, inputs::Button, Chip, ChipBuilder, ChipSet},
 };
 
 /// ```txt
@@ -21,7 +21,7 @@ use virt_ic::{
 ///    \
 /// ```
 fn main() {
-    let mut board: Board<ChipType> = Board::new();
+    let mut board: Board<ChipSet> = Board::new();
 
     let nand = board.register_chip(NandGate::build());
 
@@ -48,11 +48,11 @@ fn main() {
     println!("initial state");
     dbg!(board.get_chip(&nand).and_then(|c| c.get_pin(NandGate::AB)));
 
-    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&set_btn) {
+    if let Some(ChipSet::Button(btn)) = board.get_chip_mut(&set_btn) {
         btn.press();
     }
     board.run(Duration::from_millis(1));
-    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&set_btn) {
+    if let Some(ChipSet::Button(btn)) = board.get_chip_mut(&set_btn) {
         btn.release();
     }
     board.run(Duration::from_millis(1));
@@ -60,11 +60,11 @@ fn main() {
     println!("after set");
     dbg!(board.get_chip(&nand).and_then(|c| c.get_pin(NandGate::AB)));
 
-    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&reset_btn) {
+    if let Some(ChipSet::Button(btn)) = board.get_chip_mut(&reset_btn) {
         btn.press();
     }
     board.run(Duration::from_millis(1));
-    if let Some(ChipType::Button(btn)) = board.get_chip_mut(&reset_btn) {
+    if let Some(ChipSet::Button(btn)) = board.get_chip_mut(&reset_btn) {
         btn.release();
     }
     board.run(Duration::from_millis(1));

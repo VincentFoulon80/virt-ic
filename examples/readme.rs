@@ -2,12 +2,12 @@ use std::time::Duration;
 
 use virt_ic::{
     board::{Board, Trace},
-    chip::{gates::AndGate, generators::Generator, Chip, ChipBuilder, ChipType},
+    chip::{gates::AndGate, generators::Generator, Chip, ChipBuilder, ChipSet},
 };
 
 fn main() {
     // create a new board
-    let mut board: Board<ChipType> = Board::new();
+    let mut board: Board<ChipSet> = Board::new();
     // place an AND gate to the board
     let and_gate = board.register_chip(AndGate::build());
     // also place a generator

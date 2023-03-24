@@ -4,7 +4,7 @@ pub use helpers::*;
 
 use crate::{generate_chip, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinType};
+use super::{ChipBuilder, ChipRunner, ChipSet, Pin, PinType};
 
 /// Simple 7-Segment display
 ///
@@ -71,9 +71,9 @@ generate_chip!(
     g: SegmentDisplay::G
 );
 
-impl ChipBuilder<ChipType> for SegmentDisplay {
-    fn build() -> ChipType {
-        ChipType::SegmentDisplay(SegmentDisplay {
+impl ChipBuilder<ChipSet> for SegmentDisplay {
+    fn build() -> ChipSet {
+        ChipSet::SegmentDisplay(SegmentDisplay {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             a: Pin::from(PinType::Input),

@@ -3,11 +3,11 @@ use std::time::Duration;
 use ron::ser::PrettyConfig;
 use virt_ic::{
     board::{Board, Trace},
-    chip::{gates::AndGate, generators::Generator, ChipBuilder, ChipType},
+    chip::{gates::AndGate, generators::Generator, ChipBuilder, ChipSet},
 };
 
 fn main() {
-    let mut board: Board<ChipType> = Board::new();
+    let mut board: Board<ChipSet> = Board::new();
 
     let and_gate = board.register_chip(AndGate::build());
 
@@ -29,7 +29,7 @@ fn main() {
 
     println!("{}", saved);
 
-    let mut board2: Board<ChipType> = ron::de::from_str(&saved).unwrap();
+    let mut board2: Board<ChipSet> = ron::de::from_str(&saved).unwrap();
 
     if let Some(t) = board2.get_trace_mut(&trace) {
         t.disconnect(and_gate, AndGate::A);

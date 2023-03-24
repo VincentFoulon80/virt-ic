@@ -4,7 +4,7 @@ use rand::random;
 
 use crate::{generate_chip, State};
 
-use super::{ChipBuilder, ChipRunner, ChipType, Pin, PinType};
+use super::{ChipBuilder, ChipRunner, ChipSet, Pin, PinType};
 
 /// # A 256-bytes RAM chip
 ///
@@ -117,9 +117,9 @@ generate_chip!(
     gnd: Ram256B::GND
 );
 
-impl ChipBuilder<ChipType> for Ram256B {
-    fn build() -> ChipType {
-        ChipType::Ram256B(Ram256B {
+impl ChipBuilder<ChipSet> for Ram256B {
+    fn build() -> ChipSet {
+        ChipSet::Ram256B(Ram256B {
             powered: false,
             ram: Vec::from([0; 256]),
             vcc: Pin::from(PinType::Input),
@@ -376,9 +376,9 @@ generate_chip!(
     gnd: Ram8KB::GND
 );
 
-impl ChipBuilder<ChipType> for Ram8KB {
-    fn build() -> ChipType {
-        ChipType::Ram8KB(Ram8KB {
+impl ChipBuilder<ChipSet> for Ram8KB {
+    fn build() -> ChipSet {
+        ChipSet::Ram8KB(Ram8KB {
             powered: false,
             ram: Vec::from([0; 8192]),
             vcc: Pin::from(PinType::Input),
@@ -654,9 +654,9 @@ impl ChipBuilder<Rom256B> for Rom256B {
     }
 }
 
-impl From<Rom256B> for ChipType {
+impl From<Rom256B> for ChipSet {
     fn from(value: Rom256B) -> Self {
-        ChipType::Rom256B(value)
+        ChipSet::Rom256B(value)
     }
 }
 
@@ -905,9 +905,9 @@ impl ChipBuilder<Rom8KB> for Rom8KB {
     }
 }
 
-impl From<Rom8KB> for ChipType {
+impl From<Rom8KB> for ChipSet {
     fn from(value: Rom8KB) -> Self {
-        ChipType::Rom8KB(value)
+        ChipSet::Rom8KB(value)
     }
 }
 

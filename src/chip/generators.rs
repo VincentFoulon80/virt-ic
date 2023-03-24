@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::State;
 
-use super::{Chip, ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType};
+use super::{Chip, ChipBuilder, ChipRunner, ChipSet, Pin, PinId, PinType};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -33,9 +33,9 @@ impl ChipBuilder<Generator> for Generator {
     }
 }
 
-impl From<Generator> for ChipType {
+impl From<Generator> for ChipSet {
     fn from(value: Generator) -> Self {
-        ChipType::Generator(value)
+        ChipSet::Generator(value)
     }
 }
 

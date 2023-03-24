@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::{
-    chip::{ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType},
+    chip::{ChipBuilder, ChipRunner, ChipSet, Pin, PinId, PinType},
     generate_chip, State,
 };
 
@@ -55,9 +55,9 @@ impl NandGate {
     pub const GH: PinId = 8;
 }
 
-impl ChipBuilder<ChipType> for NandGate {
-    fn build() -> ChipType {
-        ChipType::NandGate(NandGate {
+impl ChipBuilder<ChipSet> for NandGate {
+    fn build() -> ChipSet {
+        ChipSet::NandGate(NandGate {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             a: Pin::from(PinType::Input),
@@ -164,9 +164,9 @@ impl ThreeInputNandGate {
     pub const GHI: PinId = 8;
 }
 
-impl ChipBuilder<ChipType> for ThreeInputNandGate {
-    fn build() -> ChipType {
-        ChipType::ThreeInputNandGate(ThreeInputNandGate {
+impl ChipBuilder<ChipSet> for ThreeInputNandGate {
+    fn build() -> ChipSet {
+        ChipSet::ThreeInputNandGate(ThreeInputNandGate {
             vcc: Pin::from(PinType::Input),
             gnd: Pin::from(PinType::Output),
             a: Pin::from(PinType::Input),

@@ -5,7 +5,7 @@ pub use assembler::Assembler;
 pub use opcodes::{AddressingMode, Opcode};
 
 use crate::{
-    chip::{ChipBuilder, ChipRunner, ChipType, Pin, PinType},
+    chip::{ChipBuilder, ChipRunner, ChipSet, Pin, PinType},
     generate_chip, State,
 };
 
@@ -111,9 +111,9 @@ impl ToString for Registers {
     }
 }
 
-/// https://www.nesdev.org/wiki/CPU_pinout
-/// Without the APU part yet
-/// Neither the interrupt handling and decimal mode
+/// <https://www.nesdev.org/wiki/CPU_pinout>
+/// Without the APU part yet  
+/// Neither the interrupt handling and decimal mode  
 /// WARNING: Not cycle accurate yet!
 ///
 /// ```txt
@@ -280,9 +280,9 @@ generate_chip!(
     d7: Nes6502::D7
 );
 
-impl ChipBuilder<ChipType> for Nes6502 {
-    fn build() -> ChipType {
-        ChipType::Nes6502(Box::new(Nes6502 {
+impl ChipBuilder<ChipSet> for Nes6502 {
+    fn build() -> ChipSet {
+        ChipSet::Nes6502(Box::new(Nes6502 {
             powered: false,
             clock: false,
             state: CpuState::Reset,

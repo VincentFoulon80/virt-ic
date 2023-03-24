@@ -4,12 +4,12 @@
 
 This library is a Integrated Circuit Emulator backend that can simulate interactions between multiple chips.
 
-Note that for now there is only Digital circuit emulation, Analog signals will be implemented later.
+Note that for now there is mostly Digital circuit emulation, Analog signals are kinda present but still need work.
 
-You start by creating a Board, and then you add Traces or Sockets, and then you plug Chips and link Pins together to form a virtual circuit.
+You start by creating a Board, register Chips and Traces, and link Chip pins together to form a virtual circuit.
 You can then run the circuit to emulate the chips and links between them.
 
-This library is a Backend emulator, it means that there is no GUI (yet) to create boards.
+This library is a Backend emulator, it means that there is no GUI to create boards.
 
 # Note on 0.5.0 update
 
@@ -28,6 +28,7 @@ The entire library has been rewritten from scratch in order to ease the use of t
 - Button
 - Clock
 - Memory (RAM, ROM)
+- Segment display
 - CPU (a 6502, missing interrupts and decimal mode)
 
 # Contributing

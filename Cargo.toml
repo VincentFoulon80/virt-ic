@@ -2,6 +2,7 @@
 authors = ["Vincent Foulon <sup.vfoulon@gmail.com>"]
 description = "virtual integrated circuits - an backend IC emulator"
 edition = "2021"
+include = ["src/**/*", "LICENSE", "README.md"]
 keywords = ["emulator", "integrated-circuit", "backend"]
 license = "MIT"
 name = "virt-ic"

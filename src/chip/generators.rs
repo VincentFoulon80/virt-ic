@@ -1,73 +1,60 @@
-//! Generators that provide fixed currents
-use super::{Chip, ChipInfo, Pin, PinType};
-use crate::State;
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::time::Duration;
 
-/// # A simple generator providing VCC and GND
-///
-/// # Diagram
-/// ```
-///        --------
-///  VCC --|1    2|-- GND
-///        --------
-/// ```
-#[derive(Debug)]
+use crate::State;
+
+use super::{Chip, ChipBuilder, ChipRunner, ChipType, Pin, PinId, PinType};
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Generator {
-    uuid: u128,
-    pin: [Rc<RefCell<Pin>>; 2],
-}
-impl Default for Generator {
-    fn default() -> Self {
-        Self::new()
-    }
+    state: State,
+    pub pin: Pin,
 }
 
 impl Generator {
-    pub const TYPE: &'static str = "virt_ic::Generator";
+    pub const OUT: PinId = 1;
 
-    pub const VCC: u8 = 1;
-    pub const GND: u8 = 2;
-
-    pub fn new() -> Self {
-        let uuid = uuid::Uuid::new_v4().as_u128();
-        let gen = Self {
-            uuid,
-            pin: [
-                Rc::new(RefCell::new(Pin::new(uuid, 1, PinType::Output))),
-                Rc::new(RefCell::new(Pin::new(uuid, 2, PinType::Output))),
-            ],
-        };
-        gen.pin[0].borrow_mut().state = State::High;
-        gen.pin[1].borrow_mut().state = State::Low;
-        gen
+    pub fn with_state(mut self, state: State) -> Self {
+        self.state = state;
+        self.pin.state = state;
+        self
     }
 }
-impl Chip for Generator {
-    fn get_uuid(&self) -> u128 {
-        self.uuid
-    }
-    fn get_type(&self) -> &str {
-        Self::TYPE
-    }
-    fn get_pin_qty(&self) -> u8 {
-        2
-    }
 
-    fn _get_pin(&mut self, pin: u8) -> Rc<RefCell<Pin>> {
-        self.pin[pin as usize - 1].clone()
-    }
-
-    fn get_info(&self) -> ChipInfo {
-        ChipInfo {
-            name: "Generator",
-            description: "A simple generator that provides VCC and GND for chips",
-            data: String::new(),
+impl ChipBuilder<Generator> for Generator {
+    fn build() -> Generator {
+        Generator {
+            state: State::High,
+            pin: Pin {
+                pin_type: PinType::Output,
+                state: State::High,
+            },
         }
     }
+}
 
-    fn run(&mut self, _: std::time::Duration) {
-        self.pin[0].borrow_mut().state = State::High;
-        self.pin[1].borrow_mut().state = State::Low;
+impl From<Generator> for ChipType {
+    fn from(value: Generator) -> Self {
+        ChipType::Generator(value)
+    }
+}
+
+impl Chip for Generator {
+    fn list_pins(&self) -> Vec<(super::PinId, &Pin)> {
+        vec![(Generator::OUT, &self.pin)]
+    }
+
+    fn get_pin(&self, _pin: super::PinId) -> Option<&Pin> {
+        Some(&self.pin)
+    }
+
+    fn get_pin_mut(&mut self, _pin: super::PinId) -> Option<&mut Pin> {
+        Some(&mut self.pin)
+    }
+}
+
+impl ChipRunner for Generator {
+    fn run(&mut self, _: Duration) {
+        self.pin.state = self.state
     }
 }

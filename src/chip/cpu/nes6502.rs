@@ -15,7 +15,7 @@ use super::Reg;
 
 bitflags! {
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    #[derive(Default)]
+    #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct StatusRegister: u8 {
         /// Negative
         const N = 0b10000000;
@@ -404,7 +404,7 @@ impl ChipRunner for Nes6502 {
         if self.vcc.state.as_logic(3.3) == State::High {
             if !self.powered {
                 self.state = CpuState::Reset;
-                self.registers.p.bits = 0x34;
+                self.registers.p = StatusRegister::from_bits_retain(0x34);
                 self.registers.a = 0.into();
                 self.registers.x = 0.into();
                 self.registers.y = 0.into();
@@ -1228,7 +1228,7 @@ impl ChipRunner for Nes6502 {
                                     }
                                     Opcode::PHP => {
                                         if step == 0 {
-                                            self.push_stack(self.registers.p.bits);
+                                            self.push_stack(self.registers.p.bits());
                                             step += 1;
                                         } else {
                                             self.state = CpuState::Fetch;
@@ -1239,7 +1239,8 @@ impl ChipRunner for Nes6502 {
                                             self.pop_stack_prepare();
                                             step += 1;
                                         } else {
-                                            self.registers.p.bits = self.get_data();
+                                            self.registers.p =
+                                                StatusRegister::from_bits_retain(self.get_data());
                                         }
                                     }
                                     Opcode::STA(a) => match a {

@@ -11,6 +11,10 @@ You can then run the circuit to emulate the chips and links between them.
 
 This library is a Backend emulator, it means that there is no GUI (yet) to create boards.
 
+# Note on 0.5.0 update
+
+The entire engine has been rewritten from scratch in order to ease the use of this crate, remove all those `Rc<RefCell>` that were degrading the readability of your code. Thus, virt-ic up before 0.5.0 is **completely incompatible** with newer versions.
+
 # Features
 
 - Build Boards with chips and traces between them
@@ -24,7 +28,7 @@ This library is a Backend emulator, it means that there is no GUI (yet) to creat
 - Button
 - Clock
 - Memory (RAM, ROM)
-- CPU (6502 still WIP)
+- CPU (a 6502, missing interrupts and decimal mode)
 
 # Contributing
 
@@ -109,7 +113,9 @@ Take a look at the [generated documentation](https://docs.rs/virt-ic/).
 
 See [examples](https://github.com/VincentFoulon80/virt-ic/tree/master/examples) :
 - **pins** : Read and write a set of pins using Pin::read and Pin::write
-- **readme** : Same example as provided in this readme
 - **ram** : A simple test of a RAM chip
+- **readme** : Same example as provided in this readme
 - **save** : Board saving and loading example
+- **segment-display** : Simple segment display test
+- **sr-latch** : Example of a working SR-Latch
 - **test-6502** : Test the Nes6502 CPU with a small program and basic ROM and RAM layout
